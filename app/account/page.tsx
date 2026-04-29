@@ -27,6 +27,7 @@ export default function AccountPage() {
 
   return (
     <main className="min-h-screen bg-[#f5f6f8] flex text-[#0f172a]">
+      {/* Sidebar Navigation */}
       <aside className="w-64 bg-[#101b2d] text-white p-6 flex flex-col">
         <Link href="/" className="text-5xl font-extrabold mb-2">
           F<span className="text-[#e8a88a]">Y</span>P
@@ -64,6 +65,7 @@ export default function AccountPage() {
         </Link>
       </aside>
 
+      {/* Main Content Area */}
       <section className="flex-1">
         <header className="bg-white border-b px-8 py-4 flex justify-between items-center">
           <h2 className="text-4xl font-extrabold text-[#101b2d]">FYP</h2>
@@ -82,6 +84,7 @@ export default function AccountPage() {
         </header>
 
         <div className="p-8 max-w-[1450px] mx-auto">
+          {/* Active Car Hero Section */}
           <div className="relative overflow-hidden rounded-2xl mb-6 shadow-lg bg-[#101b2d]">
             <img
               src={car.image}
@@ -133,6 +136,7 @@ export default function AccountPage() {
             </div>
           </div>
 
+          {/* Pagination Dots - FIXED PART IS HERE */}
           <div className="flex gap-2 mb-8">
             {cars.map((item, index) => (
               <button
@@ -147,6 +151,7 @@ export default function AccountPage() {
             ))}
           </div>
 
+          {/* Recent Orders and Garage Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow">
               <div className="flex justify-between mb-5">
@@ -228,6 +233,7 @@ export default function AccountPage() {
             </div>
           </div>
 
+          {/* Quick Actions Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
             {[
               ["💳", "Payment Methods", "Manage saved cards and billing info"],
@@ -246,6 +252,7 @@ export default function AccountPage() {
             ))}
           </div>
 
+          {/* Monitoring Section */}
           <div className="bg-[#101b2d] text-white rounded-2xl p-8 mt-8 flex justify-between items-center">
             <div>
               <h3 className="text-2xl font-extrabold">
