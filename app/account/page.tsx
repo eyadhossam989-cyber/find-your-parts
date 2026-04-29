@@ -12,7 +12,7 @@ const cars = [
   {
     name: "Porsche 911 (992)",
     details: "2022 • Carrera S",
-    image: "/images/porsche-911.jpg",
+    image: "/images/porsche-911.png",
   },
   {
     name: "Audi RS5 Sportback",
