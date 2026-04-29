@@ -28,60 +28,11 @@ export default function AccountPage() {
   return (
     <main className="min-h-screen bg-[#f5f6f8] flex text-[#0f172a]">
       {/* Sidebar Navigation */}
-      <aside className="w-64 bg-[#101b2d] text-white p-6 flex flex-col">
-        <Link href="/" className="text-5xl font-extrabold mb-2">
-          F<span className="text-[#e8a88a]">Y</span>P
-        </Link>
-
-        <p className="text-sm text-slate-300 mb-10">Professional Account</p>
-
-        <nav className="space-y-3">
-          <Link className="block px-4 py-3 rounded-lg bg-[#e8a88a] font-semibold" href="/account">
-            Dashboard
-          </Link>
-          <Link className="block px-4 py-3 rounded-lg hover:bg-slate-800" href="/orders">
-            Orders
-          </Link>
-          <Link className="block px-4 py-3 rounded-lg hover:bg-slate-800" href="/garage">
-            Garage
-          </Link>
-          <Link className="block px-4 py-3 rounded-lg hover:bg-slate-800" href="/parts">
-            Shop Parts
-          </Link>
-          <Link className="block px-4 py-3 rounded-lg hover:bg-slate-800" href="/cart">
-            Cart
-          </Link>
-        </nav>
-
-        <Link
-          href="/parts"
-          className="mt-auto bg-[#e8a88a] text-white font-bold py-3 rounded-lg text-center"
-        >
-          ⚡ Quick Order
-        </Link>
-
-        <Link href="/login" className="mt-6 text-sm text-slate-300">
-          Log Out
-        </Link>
-      </aside>
+      
 
       {/* Main Content Area */}
       <section className="flex-1">
-        <header className="bg-white border-b px-8 py-4 flex justify-between items-center">
-          <h2 className="text-4xl font-extrabold text-[#101b2d]">FYP</h2>
-
-          <nav className="hidden lg:flex gap-8 text-sm font-bold text-black">
-            <Link href="/parts">Shop Parts</Link>
-            <Link href="/garage">Vehicle Selector</Link>
-            <Link href="/parts/brake-pads">OEM Parts</Link>
-            <Link href="/cart">Special Offers</Link>
-          </nav>
-
-          <input
-            className="bg-gray-100 border border-gray-200 rounded-full px-5 py-3 w-80 text-black"
-            placeholder="Search components..."
-          />
-        </header>
+        
 
         <div className="p-8 max-w-[1450px] mx-auto">
           {/* Active Car Hero Section */}
