@@ -1,50 +1,10 @@
 export default function AdminPage() {
   return (
     <main className="min-h-screen bg-[#f5f6f8] flex text-slate-900">
-      <aside className="w-64 bg-[#101b2d] text-white p-6 flex flex-col">
-        <h1 className="text-4xl font-extrabold text-white mb-1">FYP</h1>
-        <p className="text-sm text-slate-300 mb-10">Admin Console</p>
-
-        <nav className="space-y-3">
-          {["Dashboard", "Orders", "Inventory", "Users", "Reports", "Settings"].map(
-            (item, index) => (
-              <a
-                key={item}
-                className={`block px-4 py-3 rounded-lg ${
-                  index === 0
-                    ? "bg-[#e8a88a] text-white font-bold"
-                    : "hover:bg-slate-800"
-                }`}
-              >
-                {item}
-              </a>
-            )
-          )}
-        </nav>
-
-        <button className="mt-auto bg-[#e8a88a] text-white font-bold py-3 rounded-lg">
-          Add New Part
-        </button>
-
-        <a className="mt-6 text-sm text-slate-300">Log Out</a>
-      </aside>
+      
 
       <section className="flex-1">
-        <header className="bg-white border-b px-8 py-4 flex justify-between items-center">
-          <h2 className="text-3xl font-extrabold text-black">FYP Admin</h2>
-
-          <nav className="hidden lg:flex gap-8 text-sm font-semibold text-black">
-            <a>Analytics</a>
-            <a>Inventory</a>
-            <a>Orders</a>
-            <a>Customers</a>
-          </nav>
-
-          <input
-            className="border border-slate-300 rounded-full px-5 py-2 w-72 text-black"
-            placeholder="Search orders or parts..."
-          />
-        </header>
+        
 
         <div className="p-8 max-w-[1400px] mx-auto">
           <div className="bg-[#101b2d] text-white rounded-xl p-6 mb-8 shadow flex justify-between items-center">
