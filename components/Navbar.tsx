@@ -5,11 +5,20 @@ import { usePathname, useRouter } from "next/navigation";
 
 export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [username, setUsername] = useState("Guest"); // Default state
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
 
   const isActive = (path: string) => pathname === path;
+
+  // 1. DYNAMIC LOGIC: Grab the name you set during Sign In
+  useEffect(() => {
+    const savedName = localStorage.getItem("fyp-user-name");
+    if (savedName) {
+      setUsername(savedName);
+    }
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -23,9 +32,9 @@ export default function Navbar() {
   }, []);
 
   const handleSignOut = () => {
-    // Logic for sign out goes here (e.g., clearing tokens)
+    localStorage.removeItem("fyp-user-name"); // Clear the name on sign out
     setIsDropdownOpen(false);
-    router.push("/signup"); // Redirects to signup automatically
+    router.push("/signup");
   };
 
   return (
@@ -69,7 +78,7 @@ export default function Navbar() {
 
         <div className="h-8 w-[1px] bg-gray-200 mx-2 hidden sm:block" />
 
-        {/* Account Dropdown Container */}
+        {/* Account Dropdown */}
         <div className="relative">
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -78,40 +87,29 @@ export default function Navbar() {
             <div className="w-6 h-6 rounded-full bg-[#e8a88a] flex items-center justify-center text-[10px] text-[#101b2d]">
               👤
             </div>
-            <span className="text-sm">Account</span>
+            {/* THIS TEXT IS NOW DYNAMIC */}
+            <span className="text-sm truncate max-w-[100px]">{username}</span>
             <span className={`text-[10px] transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
           </button>
 
-          {/* Actual Dropdown Menu */}
           {isDropdownOpen && (
             <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="px-4 py-3 border-b border-gray-50 mb-1">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Logged in as</p>
-                <p className="text-sm font-bold text-[#101b2d] truncate">m4_enthusiast@fyp.com</p>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Profile</p>
+                <p className="text-sm font-bold text-[#101b2d] truncate">{username}</p>
               </div>
 
-              <Link 
-                href="/account" 
-                onClick={() => setIsDropdownOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#e8a88a] transition-colors"
-              >
-                <span>👤</span> View Profile
+              <Link href="/account" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#e8a88a]">
+                <span>👤</span> Settings
               </Link>
               
-              <Link 
-                href="/login" 
-                onClick={() => setIsDropdownOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#e8a88a] transition-colors"
-              >
+              <Link href="/login" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#e8a88a]">
                 <span>🔑</span> Switch Account
               </Link>
 
               <div className="h-[1px] bg-gray-100 my-1 mx-2" />
 
-              <button
-                onClick={handleSignOut}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors text-left"
-              >
+              <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors text-left">
                 <span>🚪</span> Sign Out
               </button>
             </div>
