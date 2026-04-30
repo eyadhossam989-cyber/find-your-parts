@@ -1,121 +1,94 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 
-export default function Navbar() {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [username, setUsername] = useState("Guest"); // Default state
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const pathname = usePathname();
+export default function SignUpPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const router = useRouter();
 
-  const isActive = (path: string) => pathname === path;
-
-  // 1. DYNAMIC LOGIC: Grab the name you set during Sign In
-  useEffect(() => {
-    const savedName = localStorage.getItem("fyp-user-name");
-    if (savedName) {
-      setUsername(savedName);
+  const handleSignUp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (name) {
+      localStorage.setItem("fyp-user-name", name);
+      router.push("/parts");
     }
-  }, []);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleSignOut = () => {
-    localStorage.removeItem("fyp-user-name"); // Clear the name on sign out
-    setIsDropdownOpen(false);
-    router.push("/signup");
   };
 
   return (
-    <header className="h-24 bg-white/80 backdrop-blur-md border-b border-gray-100 px-8 lg:px-16 flex items-center justify-between shadow-sm sticky top-0 z-50">
-      
-      {/* Brand Logo */}
-      <Link
-        href="/"
-        className="text-4xl font-black text-[#101b2d] tracking-tighter transition-all duration-300 hover:scale-105 group"
-      >
-        F<span className="text-[#e8a88a] group-hover:drop-shadow-[0_0_8px_rgba(232,168,138,0.6)]">Y</span>P
-      </Link>
+    // min-h-[calc(100vh-96px)] ensures it fits perfectly under your 24px (h-24) Navbar
+    <main className="min-h-[calc(100vh-96px)] bg-[#f5f6f8] flex items-center justify-center p-4">
+      <div className="max-w-[450px] w-full bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-10 border border-gray-100 animate-in fade-in zoom-in duration-500">
+        
+        {/* Logo & Header */}
+        <div className="text-center mb-10">
+          <div className="inline-block mb-4">
+            <h1 className="text-5xl font-black text-[#101b2d] tracking-tighter">
+              F<span className="text-[#e8a88a]">Y</span>P
+            </h1>
+          </div>
+          <h2 className="text-2xl font-extrabold text-[#101b2d]">Create Account</h2>
+          <p className="text-gray-400 font-bold text-sm mt-1">Join the professional parts network</p>
+        </div>
 
-      {/* Navigation */}
-      <nav className="hidden md:flex items-center gap-10">
-        {[
-          { name: "Catalog", href: "/parts" },
-          { name: "My Garage", href: "/garage" },
-          { name: "Orders", href: "/orders" },
-        ].map((link) => (
-          <Link
-            key={link.name}
-            href={link.href}
-            className={`relative text-sm font-black uppercase tracking-widest transition-colors duration-300 group
-              ${isActive(link.href) ? "text-[#e8a88a]" : "text-[#101b2d]/70 hover:text-[#101b2d]"}`}
-          >
-            {link.name}
-            <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-[#e8a88a] transition-all duration-300 group-hover:w-full 
-              ${isActive(link.href) ? "w-full" : ""}`} 
+        <form onSubmit={handleSignUp} className="space-y-5">
+          {/* Full Name Input */}
+          <div className="group">
+            <label className="text-[10px] font-black uppercase text-gray-400 ml-4 mb-1 block tracking-widest">
+              Full Name
+            </label>
+            <input 
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-[#f5f6f8] border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a] transition-all font-bold text-[#101b2d] placeholder:text-gray-300" 
+              placeholder="e.g. Alex M-Power" 
             />
-          </Link>
-        ))}
-      </nav>
+          </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center gap-5 relative" ref={dropdownRef}>
-        <Link href="/cart" className="relative p-2 text-[#101b2d] hover:bg-gray-50 rounded-full transition-all group">
-          <span className="text-2xl">🛒</span>
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-[#e8a88a] rounded-full border-2 border-white" />
-        </Link>
+          {/* Email Input */}
+          <div className="group">
+            <label className="text-[10px] font-black uppercase text-gray-400 ml-4 mb-1 block tracking-widest">
+              Email Address
+            </label>
+            <input 
+              type="email"
+              required
+              className="w-full bg-[#f5f6f8] border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a] transition-all font-bold text-[#101b2d] placeholder:text-gray-300" 
+              placeholder="alex@m-series.com" 
+            />
+          </div>
 
-        <div className="h-8 w-[1px] bg-gray-200 mx-2 hidden sm:block" />
+          {/* Password Input */}
+          <div className="group">
+            <label className="text-[10px] font-black uppercase text-gray-400 ml-4 mb-1 block tracking-widest">
+              Password
+            </label>
+            <input 
+              type="password"
+              required
+              className="w-full bg-[#f5f6f8] border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a] transition-all font-bold text-[#101b2d] placeholder:text-gray-300" 
+              placeholder="••••••••" 
+            />
+          </div>
 
-        {/* Account Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-3 bg-[#101b2d] text-white px-5 py-2.5 rounded-xl font-bold transition-all duration-300 hover:bg-[#1a2b47] border border-white/10 active:scale-95"
+          {/* Submit Button */}
+          <button 
+            type="submit"
+            className="w-full bg-[#101b2d] text-white py-5 rounded-2xl font-black mt-4 hover:bg-black transition-all shadow-xl shadow-[#101b2d]/10 active:scale-[0.98] flex items-center justify-center gap-2"
           >
-            <div className="w-6 h-6 rounded-full bg-[#e8a88a] flex items-center justify-center text-[10px] text-[#101b2d]">
-              👤
-            </div>
-            {/* THIS TEXT IS NOW DYNAMIC */}
-            <span className="text-sm truncate max-w-[100px]">{username}</span>
-            <span className={`text-[10px] transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
+            Start Building <span>🚀</span>
           </button>
+        </form>
 
-          {isDropdownOpen && (
-            <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="px-4 py-3 border-b border-gray-50 mb-1">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Profile</p>
-                <p className="text-sm font-bold text-[#101b2d] truncate">{username}</p>
-              </div>
-
-              <Link href="/account" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#e8a88a]">
-                <span>👤</span> Settings
-              </Link>
-              
-              <Link href="/login" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#e8a88a]">
-                <span>🔑</span> Switch Account
-              </Link>
-
-              <div className="h-[1px] bg-gray-100 my-1 mx-2" />
-
-              <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors text-left">
-                <span>🚪</span> Sign Out
-              </button>
-            </div>
-          )}
+        {/* Footer Link */}
+        <div className="mt-10 pt-8 border-t border-gray-50 text-center">
+          <p className="text-sm text-gray-400 font-bold">
+            Already a member? <Link href="/login" className="text-[#e8a88a] hover:underline ml-1">Log In →</Link>
+          </p>
         </div>
       </div>
-    </header>
+    </main>
   );
 }
