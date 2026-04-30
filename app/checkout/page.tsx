@@ -16,9 +16,8 @@ const ShieldIcon = () => <span className="text-2xl">🛡️</span>;
 export default function CheckoutPage() {
   const [items, setItems] = useState<any[]>([]);
   const [shipping, setShipping] = useState(12.50);
-  const [paymentMethod, setPaymentMethod] = useState("card"); // Track payment type
+  const [paymentMethod, setPaymentMethod] = useState("card");
 
-  // Load data from localStorage
   useEffect(() => {
     const savedCart = localStorage.getItem("fyp-cart");
     if (savedCart) {
@@ -27,7 +26,6 @@ export default function CheckoutPage() {
     }
   }, []);
 
-  // Real-time Math Logic
   const subtotal = items.reduce((acc, item) => acc + (Number(item.price) * item.qty), 0);
   const tax = subtotal * 0.08;
   const total = subtotal + tax + shipping;
@@ -42,8 +40,6 @@ export default function CheckoutPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8 space-y-8">
-            
-            {/* Shipping Address */}
             <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
               <div className="flex items-center gap-4 mb-6">
                 <IconBox><AddressIcon /></IconBox>
@@ -58,7 +54,6 @@ export default function CheckoutPage() {
               </div>
             </section>
 
-            {/* Delivery Method (Logic Unchanged as requested) */}
             <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
               <div className="flex items-center gap-4 mb-6">
                 <IconBox><TruckIcon /></IconBox>
@@ -76,13 +71,11 @@ export default function CheckoutPage() {
               </div>
             </section>
 
-            {/* Payment Method - Now with PayPal Toggle */}
             <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
               <div className="flex items-center gap-4 mb-6">
                 <IconBox><PaymentIcon /></IconBox>
                 <h3 className="text-2xl font-extrabold">Payment Method</h3>
               </div>
-              
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <button 
                   onClick={() => setPaymentMethod("card")}
@@ -115,11 +108,9 @@ export default function CheckoutPage() {
             </section>
           </div>
 
-          {/* SIDEBAR SUMMARY - Fixed $0 Issue */}
           <aside className="lg:col-span-4">
             <div className="bg-[#101b2d] text-white rounded-3xl shadow-xl p-8 sticky top-24">
               <h3 className="text-2xl font-extrabold border-b border-white/20 pb-5 mb-5">Order Summary</h3>
-              
               <div className="space-y-4 mb-6 max-h-[250px] overflow-y-auto pr-2">
                 {items.length > 0 ? items.map((item) => (
                   <div key={item.id} className="flex gap-4 items-center">
@@ -151,7 +142,8 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <Link href="/orders" className="w-full bg-[#e8a88a] text-white mt-6 py-4 rounded-xl font-extrabold hover:scale-[1.02] transition-all block text-center shadow-lg">
+              {/* CHANGE IS HERE: Linked to /success instead of /orders */}
+              <Link href="/success" className="w-full bg-[#e8a88a] text-white mt-6 py-4 rounded-xl font-extrabold hover:scale-[1.02] transition-all block text-center shadow-lg">
                 Place Order →
               </Link>
             </div>
