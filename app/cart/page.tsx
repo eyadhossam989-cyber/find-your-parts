@@ -14,7 +14,7 @@ type CartItem = {
   image: string;
 };
 
-// ---------------- COMPONENT: ITEM ----------------
+// ---------------- CART ITEM ----------------
 function CartItemCard({
   item,
   updateQty,
@@ -26,13 +26,18 @@ function CartItemCard({
 }) {
   return (
     <div className="bg-white rounded-2xl p-6 flex gap-6 items-center border border-gray-100 shadow-sm hover:shadow-md transition">
-      <Image
-        src={item.image}
-        alt={item.name}
-        width={120}
-        height={120}
-        className="rounded-xl object-cover bg-gray-100"
-      />
+
+      {/* ✅ FIXED IMAGE */}
+      <div className="w-32 h-32 relative rounded-xl overflow-hidden bg-gray-100">
+        <Image
+          src={item.image}
+          alt={item.name}
+          fill
+          className="object-cover hover:scale-105 transition duration-300"
+          sizes="128px"
+          priority
+        />
+      </div>
 
       <div className="flex-1">
         <div className="flex justify-between">
@@ -51,7 +56,7 @@ function CartItemCard({
         </p>
 
         <div className="flex justify-between items-center mt-4">
-          {/* Quantity Counter */}
+          {/* Quantity */}
           <div className="flex items-center bg-gray-100 rounded-lg">
             <button
               onClick={() => updateQty(item.id, -1)}
@@ -59,7 +64,9 @@ function CartItemCard({
             >
               −
             </button>
+
             <span className="px-4 font-bold">{item.qty}</span>
+
             <button
               onClick={() => updateQty(item.id, 1)}
               className="px-4 py-2 font-bold hover:bg-gray-200"
@@ -80,7 +87,7 @@ function CartItemCard({
   );
 }
 
-// ---------------- COMPONENT: EMPTY STATE ----------------
+// ---------------- EMPTY CART ----------------
 function EmptyCart() {
   return (
     <div className="bg-white rounded-2xl p-12 text-center shadow-sm border">
@@ -101,7 +108,7 @@ function EmptyCart() {
   );
 }
 
-// ---------------- COMPONENT: ORDER SUMMARY ----------------
+// ---------------- ORDER SUMMARY ----------------
 function OrderSummary({
   subtotal,
   tax,
@@ -137,7 +144,9 @@ function OrderSummary({
 
         <div className="border-t pt-4 flex justify-between text-lg font-extrabold">
           <span>Total</span>
-          <span className="text-[#101b2d]">${total.toFixed(2)}</span>
+          <span className="text-[#101b2d]">
+            ${total.toFixed(2)}
+          </span>
         </div>
       </div>
 
@@ -161,14 +170,14 @@ export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  // Load from localStorage ONLY once
+  // Load cart
   useEffect(() => {
     const saved = localStorage.getItem("fyp-cart");
 
     if (saved) {
       setItems(JSON.parse(saved));
     } else {
-      const defaultItems = [
+      const defaults = [
         {
           id: 1,
           name: "Carbon-Ceramic Brake Pad Kit",
@@ -187,14 +196,14 @@ export default function CartPage() {
         },
       ];
 
-      setItems(defaultItems);
-      localStorage.setItem("fyp-cart", JSON.stringify(defaultItems));
+      setItems(defaults);
+      localStorage.setItem("fyp-cart", JSON.stringify(defaults));
     }
 
     setLoaded(true);
   }, []);
 
-  // Save updates
+  // Save cart
   useEffect(() => {
     if (loaded) {
       localStorage.setItem("fyp-cart", JSON.stringify(items));
@@ -213,8 +222,7 @@ export default function CartPage() {
   };
 
   const removeItem = (id: number) => {
-    const updated = items.filter((item) => item.id !== id);
-    setItems(updated);
+    setItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   // Calculations
