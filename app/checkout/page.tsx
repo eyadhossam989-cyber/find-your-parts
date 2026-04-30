@@ -1,155 +1,119 @@
 "use client";
 import { useState, useEffect } from "react";
-import Link from "next/link";
-
-const IconBox = ({ children }: { children: React.ReactNode }) => (
-  <div className="w-11 h-11 rounded-xl bg-[#e8a88a]/15 text-[#e8a88a] flex items-center justify-center">
-    {children}
-  </div>
-);
-
-const TruckIcon = () => <span className="text-2xl">🚚</span>;
-const AddressIcon = () => <span className="text-2xl">📍</span>;
-const PaymentIcon = () => <span className="text-2xl">💳</span>;
-const ShieldIcon = () => <span className="text-2xl">🛡️</span>;
 
 export default function CheckoutPage() {
-  const [items, setItems] = useState<any[]>([]);
-  const [shipping, setShipping] = useState(12.50);
-  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const savedCart = localStorage.getItem("fyp-cart");
-    if (savedCart) {
-      const parsedItems = JSON.parse(savedCart);
-      setItems(parsedItems);
+    // 1. Get data from storage
+    const saved = localStorage.getItem("fyp-cart");
+    
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        
+        // 2. FORCE VALIDATION: This stops the NaN error
+        // It ensures price and quantity are real numbers before the page renders
+        const validatedData = parsed.map((item: any) => ({
+          ...item,
+          price: parseFloat(item.price) || 0,
+          quantity: parseInt(item.quantity) || 1,
+          // If image is missing, we set a temporary string to trigger the fail-safe
+          image: item.image || "/placeholder.png" 
+        }));
+        
+        setCartItems(validatedData);
+      } catch (err) {
+        console.error("Data Sync Error:", err);
+      }
     }
+    setIsLoaded(true);
   }, []);
 
-  const subtotal = items.reduce((acc, item) => acc + (Number(item.price) * item.qty), 0);
+  // 3. MATH SAFETY: Calculation with fallback to 0
+  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const shipping = 12.50;
   const tax = subtotal * 0.08;
-  const total = subtotal + tax + shipping;
+  const total = subtotal + shipping + tax;
+
+  if (!isLoaded) return null;
 
   return (
-    <main className="min-h-screen bg-[#f5f6f8] text-[#101827]">
-      <section className="max-w-[1280px] mx-auto p-8">
-        <div className="mb-8">
-          <p className="text-[#e8a88a] font-bold uppercase tracking-wider text-sm">Secure Checkout</p>
-          <h2 className="text-5xl font-extrabold text-[#101b2d]">Checkout</h2>
+    <main className="min-h-screen bg-[#F8FAFC] p-6 md:p-16 font-sans">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
+        
+        {/* Left Side: Form Fields */}
+        <div className="space-y-6">
+          <h1 className="text-4xl font-black text-[#101b2d] uppercase tracking-tighter">Checkout</h1>
+          <div className="space-y-4">
+            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-4">Shipping Information</label>
+              <div className="space-y-3">
+                <input placeholder="Full Name" className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-[#e8a88a]/20" />
+                <input placeholder="Address Line" className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-[#e8a88a]/20" />
+              </div>
+            </div>
+            <button className="w-full bg-[#101b2d] text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] hover:bg-[#e8a88a] transition-all shadow-xl shadow-slate-200">
+              Confirm & Pay
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-8 space-y-8">
-            <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
-              <div className="flex items-center gap-4 mb-6">
-                <IconBox><AddressIcon /></IconBox>
-                <h3 className="text-2xl font-extrabold">Shipping Address</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <input className="md:col-span-2 border rounded-xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a]" placeholder="Full Name" />
-                <input className="md:col-span-2 border rounded-xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a]" placeholder="Street Address" />
-                <input className="border rounded-xl p-4 outline-none" placeholder="City" />
-                <input className="border rounded-xl p-4 outline-none" placeholder="State" />
-                <input className="border rounded-xl p-4 outline-none" placeholder="ZIP Code" />
-              </div>
-            </section>
-
-            <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
-              <div className="flex items-center gap-4 mb-6">
-                <IconBox><TruckIcon /></IconBox>
-                <h3 className="text-2xl font-extrabold">Delivery Method</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button onClick={() => setShipping(12.50)} className={`p-5 rounded-2xl flex justify-between border-2 ${shipping === 12.50 ? 'border-[#101b2d] bg-[#101b2d]/5' : 'border-gray-100'}`}>
-                  <div className="text-left"><p className="font-bold">Standard</p></div>
-                  <b>$12.50</b>
-                </button>
-                <button onClick={() => setShipping(28.00)} className={`p-5 rounded-2xl flex justify-between border-2 ${shipping === 28.00 ? 'border-[#101b2d] bg-[#101b2d]/5' : 'border-gray-100'}`}>
-                  <div className="text-left"><p className="font-bold">Express</p></div>
-                  <b>$28.00</b>
-                </button>
-              </div>
-            </section>
-
-            <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
-              <div className="flex items-center gap-4 mb-6">
-                <IconBox><PaymentIcon /></IconBox>
-                <h3 className="text-2xl font-extrabold">Payment Method</h3>
-              </div>
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <button 
-                  onClick={() => setPaymentMethod("card")}
-                  className={`rounded-xl py-3 font-bold border-2 transition ${paymentMethod === 'card' ? 'border-[#101b2d] bg-[#101b2d]/5' : 'border-gray-100'}`}
-                >
-                  💳 Credit Card
-                </button>
-                <button 
-                  onClick={() => setPaymentMethod("paypal")}
-                  className={`rounded-xl py-3 font-bold border-2 transition ${paymentMethod === 'paypal' ? 'border-[#101b2d] bg-[#101b2d]/5' : 'border-gray-100'}`}
-                >
-                  PayPal
-                </button>
-              </div>
-
-              {paymentMethod === "card" ? (
-                <div className="space-y-4 animate-in fade-in duration-300">
-                  <input className="w-full border rounded-xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a]" placeholder="Card Number" />
-                  <div className="grid grid-cols-2 gap-4">
-                    <input className="border rounded-xl p-4 outline-none" placeholder="MM/YY" />
-                    <input className="border rounded-xl p-4 outline-none" placeholder="CVC" />
-                  </div>
+        {/* Right Side: Order Summary (The part from your screenshot) */}
+        <div className="bg-[#0b1221] text-white p-10 rounded-[3rem] shadow-2xl h-fit">
+          <h2 className="text-[10px] font-black mb-10 tracking-[0.4em] uppercase text-white/20 border-b border-white/5 pb-5">Order Summary</h2>
+          
+          <div className="space-y-6 mb-12">
+            {cartItems.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-5">
+                {/* Image Fail-Safe */}
+                <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center p-3 border border-white/10 shrink-0">
+                  <img 
+                    src={item.image} 
+                    alt={item.name}
+                    className="max-w-full max-h-full object-contain"
+                    // If the file "/brake-pad.png" isn't found, this loads a clean UI icon
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=1e293b&color=ffffff&size=128&bold=true`;
+                    }}
+                  />
                 </div>
-              ) : (
-                <div className="animate-in slide-in-from-top-2 duration-300">
-                  <label className="text-sm font-bold text-gray-600 ml-1">PayPal Email or Username</label>
-                  <input className="w-full border-2 border-[#101b2d] rounded-xl p-4 mt-2 outline-none" placeholder="example@paypal.com" />
+                <div className="flex-1">
+                  <h4 className="text-xs font-black text-white leading-tight uppercase tracking-tight">{item.name}</h4>
+                  <p className="text-[10px] font-bold text-white/30 mt-1 uppercase tracking-widest">
+                    QTY: {item.quantity} <span className="mx-2">×</span> ${item.price.toFixed(2)}
+                  </p>
                 </div>
-              )}
-            </section>
+              </div>
+            ))}
           </div>
 
-          <aside className="lg:col-span-4">
-            <div className="bg-[#101b2d] text-white rounded-3xl shadow-xl p-8 sticky top-24">
-              <h3 className="text-2xl font-extrabold border-b border-white/20 pb-5 mb-5">Order Summary</h3>
-              <div className="space-y-4 mb-6 max-h-[250px] overflow-y-auto pr-2">
-                {items.length > 0 ? items.map((item) => (
-                  <div key={item.id} className="flex gap-4 items-center">
-                    <img src={item.image} className="w-12 h-12 rounded-lg object-cover bg-white" alt={item.name} />
-                    <div className="flex-1">
-                      <p className="font-bold text-xs">{item.name}</p>
-                      <p className="text-white/60 text-xs">QTY: {item.qty} × ${Number(item.price).toFixed(2)}</p>
-                    </div>
-                  </div>
-                )) : <p className="text-white/40 italic">No items found</p>}
-              </div>
-
-              <div className="border-t border-white/20 pt-5 space-y-3">
-                <div className="flex justify-between text-white/70">
-                  <span>Subtotal</span>
-                  <span className="text-white font-bold">${subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-white/70">
-                  <span>Shipping</span>
-                  <span className="text-white font-bold">${shipping.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-white/70">
-                  <span>Tax (8%)</span>
-                  <span className="text-white font-bold">${tax.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-2xl font-extrabold text-[#e8a88a] pt-4">
-                  <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* CHANGE IS HERE: Linked to /success instead of /orders */}
-              <Link href="/success" className="w-full bg-[#e8a88a] text-white mt-6 py-4 rounded-xl font-extrabold hover:scale-[1.02] transition-all block text-center shadow-lg">
-                Place Order →
-              </Link>
+          {/* Pricing Logic */}
+          <div className="space-y-4 pt-8 border-t border-white/5">
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">
+              <span>Subtotal</span>
+              <span className="text-white">${subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
             </div>
-          </aside>
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">
+              <span>Shipping Charge</span>
+              <span className="text-white">${shipping.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">
+              <span>Tax Estimation (8%)</span>
+              <span className="text-white">${tax.toFixed(2)}</span>
+            </div>
+            
+            <div className="pt-8 mt-4 border-t border-white/5 flex justify-between items-end">
+              <div>
+                <p className="text-[8px] font-black text-[#e8a88a] uppercase tracking-[0.5em] mb-2">Total Amount</p>
+                <p className="text-5xl font-black tracking-tighter leading-none">${total.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
+
+      </div>
     </main>
   );
 }
