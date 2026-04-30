@@ -8,7 +8,7 @@ const featuredCars = [
   },
   {
     name: "Porsche 911",
-    image: "/images/porsche-911.jpg",
+    image: "/images/porsche-911.png",
     text: "Premium OEM and aftermarket parts.",
   },
   {
