@@ -1,150 +1,276 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
+// ---------------- TYPES ----------------
+type CartItem = {
+  id: number;
+  name: string;
+  sku: string;
+  price: number;
+  qty: number;
+  image: string;
+};
+
+// ---------------- ITEM COMPONENT ----------------
+function CartItemCard({
+  item,
+  updateQty,
+  removeItem,
+}: {
+  item: CartItem;
+  updateQty: (id: number, delta: number) => void;
+  removeItem: (id: number) => void;
+}) {
+  return (
+    <div className="bg-white rounded-2xl p-6 flex gap-6 items-center border border-gray-100 shadow-sm hover:shadow-md transition">
+      
+      {/* ✅ YOUR FIXED IMAGE */}
+      <div className="relative w-32 h-32 rounded-xl overflow-hidden bg-gray-100">
+        <Image
+          src={item.image}
+          alt={item.name}
+          fill
+          unoptimized
+          priority
+          style={{ objectFit: "cover" }}
+        />
+      </div>
+
+      <div className="flex-1">
+        <div className="flex justify-between">
+          <div>
+            <h3 className="text-lg font-extrabold">{item.name}</h3>
+            <p className="text-sm text-gray-500">{item.sku}</p>
+          </div>
+
+          <p className="text-[#e8a88a] font-extrabold text-lg">
+            ${item.price.toFixed(2)}
+          </p>
+        </div>
+
+        <p className="text-green-600 text-xs mt-1 font-semibold">
+          ● Perfect fit for your vehicle
+        </p>
+
+        <div className="flex justify-between items-center mt-4">
+          
+          {/* Quantity */}
+          <div className="flex items-center bg-gray-100 rounded-lg">
+            <button
+              onClick={() => updateQty(item.id, -1)}
+              className="px-4 py-2 font-bold hover:bg-gray-200"
+            >
+              −
+            </button>
+
+            <span className="px-4 font-bold">{item.qty}</span>
+
+            <button
+              onClick={() => updateQty(item.id, 1)}
+              className="px-4 py-2 font-bold hover:bg-gray-200"
+            >
+              +
+            </button>
+          </div>
+
+          <button
+            onClick={() => removeItem(item.id)}
+            className="text-gray-400 hover:text-red-600 font-semibold"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------- EMPTY CART ----------------
+function EmptyCart() {
+  return (
+    <div className="bg-white rounded-2xl p-12 text-center shadow-sm border">
+      <h2 className="text-2xl font-extrabold mb-2">
+        Your cart is empty
+      </h2>
+      <p className="text-gray-500 mb-6">
+        Looks like you haven’t added any parts yet.
+      </p>
+
+      <Link
+        href="/shop"
+        className="inline-block bg-[#e8a88a] text-white px-6 py-3 rounded-lg font-bold hover:scale-105 transition"
+      >
+        Browse Parts →
+      </Link>
+    </div>
+  );
+}
+
+// ---------------- ORDER SUMMARY ----------------
+function OrderSummary({
+  subtotal,
+  tax,
+  total,
+  count,
+}: {
+  subtotal: number;
+  tax: number;
+  total: number;
+  count: number;
+}) {
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow sticky top-24 border">
+      <h3 className="text-xl font-extrabold mb-6">
+        Order Summary ({count})
+      </h3>
+
+      <div className="space-y-3 text-sm">
+        <div className="flex justify-between">
+          <span>Subtotal</span>
+          <span>${subtotal.toFixed(2)}</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span>Shipping</span>
+          <span className="text-green-600 font-semibold">FREE</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span>Tax (8%)</span>
+          <span>${tax.toFixed(2)}</span>
+        </div>
+
+        <div className="border-t pt-4 flex justify-between text-lg font-extrabold">
+          <span>Total</span>
+          <span className="text-[#101b2d]">
+            ${total.toFixed(2)}
+          </span>
+        </div>
+      </div>
+
+      <Link
+        href="/checkout"
+        className={`block w-full mt-6 py-3 text-center rounded-xl font-bold transition
+        ${
+          count > 0
+            ? "bg-[#e8a88a] text-white hover:scale-[1.02] hover:shadow-lg"
+            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+        }`}
+      >
+        Checkout →
+      </Link>
+    </div>
+  );
+}
+
+// ---------------- MAIN PAGE ----------------
 export default function CartPage() {
-  const defaultItems = [
-    {
-      id: "brake-1",
-      name: "High-Performance Brake Pads",
-      category: "Braking System",
-      price: 299,
-      quantity: 1,
-      image: "/brake-pad.png" // Exact name from image_2967d9.png
-    },
-    {
-      id: "oil-1",
-      name: "Synthetic Oil Filter",
-      category: "Maintenance",
-      price: 45,
-      quantity: 1,
-      image: "/oil-filter.png" // Exact name from image_2967d9.png
-    }
-  ];
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  const [cartItems, setCartItems] = useState<any[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
-
+  // Load cart ONCE
   useEffect(() => {
-    const savedCart = localStorage.getItem("fyp-cart");
-    if (savedCart && JSON.parse(savedCart).length > 0) {
-      setCartItems(JSON.parse(savedCart));
+    const saved = localStorage.getItem("fyp-cart");
+
+    if (saved) {
+      setItems(JSON.parse(saved));
     } else {
-      setCartItems(defaultItems);
-      localStorage.setItem("fyp-cart", JSON.stringify(defaultItems));
+      const defaults = [
+        {
+          id: 1,
+          name: "Carbon-Ceramic Brake Pad Kit",
+          sku: "BP-992-G82-OEM",
+          price: 449,
+          qty: 1,
+          image: "/images/brake-pad.jpg",
+        },
+        {
+          id: 2,
+          name: "Performance Synthetic Oil Filter",
+          sku: "OF-M-FILTER-PRO",
+          price: 24.95,
+          qty: 2,
+          image: "/images/oil-filter.jpg",
+        },
+      ];
+
+      setItems(defaults);
+      localStorage.setItem("fyp-cart", JSON.stringify(defaults));
     }
-    setIsLoaded(true);
+
+    setLoaded(true);
   }, []);
 
-  const updateQuantity = (id: string, delta: number) => {
-    const updatedCart = cartItems.map((item) => {
-      if (item.id === id) {
-        const newQty = Math.max(1, (item.quantity || 1) + delta);
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    });
-    setCartItems(updatedCart);
-    localStorage.setItem("fyp-cart", JSON.stringify(updatedCart));
-    window.dispatchEvent(new Event("storage"));
-  };
+  // Save cart
+  useEffect(() => {
+    if (loaded) {
+      localStorage.setItem("fyp-cart", JSON.stringify(items));
+    }
+  }, [items, loaded]);
 
-  const removeItem = (id: string) => {
-    const updatedCart = cartItems.filter((item) => item.id !== id);
-    setCartItems(updatedCart);
-    localStorage.setItem("fyp-cart", JSON.stringify(updatedCart));
-    window.dispatchEvent(new Event("storage"));
-  };
-
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.08;
-  const grandTotal = subtotal + tax;
-
-  if (!isLoaded) return null;
-
-  if (cartItems.length === 0) {
-    return (
-      <main className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-8">
-        <h2 className="text-3xl font-black text-[#101b2d] mb-6 uppercase tracking-tighter">Your cart is empty.</h2>
-        <Link href="/parts" className="bg-[#101b2d] text-white px-10 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#e8a88a] transition-all">
-          Go to Catalog
-        </Link>
-      </main>
+  // Logic
+  const updateQty = (id: number, delta: number) => {
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, qty: Math.max(1, item.qty + delta) }
+          : item
+      )
     );
-  }
+  };
+
+  const removeItem = (id: number) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  // Calculations
+  const subtotal = items.reduce(
+    (acc, item) => acc + item.price * item.qty,
+    0
+  );
+  const tax = subtotal * 0.08;
+  const total = subtotal + tax;
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] py-16 px-6 lg:px-20">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-12">
-          <h1 className="text-5xl font-black text-[#101b2d] tracking-tighter uppercase leading-none">
-            Shopping <span className="text-[#e8a88a]">Cart.</span>
-          </h1>
-        </div>
+    <main className="min-h-screen bg-[#f5f6f8] text-[#101827] p-8">
+      <div className="max-w-[1200px] mx-auto">
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          <div className="lg:col-span-8 space-y-3">
-            {cartItems.map((item) => (
-              <div key={item.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 flex flex-col md:flex-row items-center gap-8 shadow-sm">
-                {/* Image Container: Removed mix-blend and added border to check visibility */}
-                <div className="w-40 h-40 bg-white rounded-2xl flex items-center justify-center p-2 border border-slate-50 relative">
-                  <img 
-                    src={item.image} 
-                    alt={item.name} 
-                    className="max-w-full max-h-full object-contain block" // "block" ensures it takes up space
-                    key={item.id} // Forces re-render if ID changes
-                  />
-                </div>
+        <h1 className="text-3xl font-extrabold mb-6">
+          Shopping Cart ({items.length})
+        </h1>
 
-                <div className="flex-1 text-center md:text-left">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{item.category}</p>
-                  <h3 className="text-xl font-black text-[#101b2d] mb-4 tracking-tight">{item.name}</h3>
-                  <button onClick={() => removeItem(item.id)} className="text-[9px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest">
-                    Remove
-                  </button>
-                </div>
+        {items.length === 0 ? (
+          <EmptyCart />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                {/* Counter */}
-                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
-                  <button onClick={() => updateQuantity(item.id, -1)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white shadow-sm font-black">−</button>
-                  <span className="w-8 text-center font-black text-sm">{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.id, 1)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white shadow-sm font-black">+</button>
-                </div>
-
-                <div className="min-w-[100px] text-right font-black text-xl text-[#101b2d]">
-                  ${(item.price * item.quantity).toLocaleString()}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Professional Order Summary Side Panel */}
-          <div className="lg:col-span-4">
-            <div className="bg-[#101b2d] text-white p-10 rounded-[2.5rem] shadow-2xl">
-              <h2 className="text-[10px] font-black mb-8 tracking-[0.2em] uppercase text-white/30 border-b border-white/10 pb-4">Order Summary</h2>
-              
-              <div className="space-y-4 mb-10">
-                <div className="flex justify-between items-center text-[9px] uppercase font-bold tracking-widest">
-                  <span className="text-white/40">Subtotal</span>
-                  <span>${subtotal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center text-[9px] uppercase font-bold tracking-widest">
-                  <span className="text-white/40">Tax (8%)</span>
-                  <span>${tax.toFixed(2)}</span>
-                </div>
-                
-                <div className="pt-6 mt-6 border-t border-white/10">
-                  <p className="text-[8px] font-black text-[#e8a88a] uppercase tracking-[0.4em] mb-2">Grand Total</p>
-                  <p className="text-4xl font-black tracking-tighter leading-none">${grandTotal.toLocaleString()}</p>
-                </div>
-              </div>
-
-              <Link href="/checkout" className="block w-full bg-[#e8a88a] text-[#101b2d] text-center py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-white transition-all">
-                Proceed to Checkout
-              </Link>
+            {/* ITEMS */}
+            <div className="lg:col-span-8 space-y-5">
+              {items.map((item) => (
+                <CartItemCard
+                  key={item.id}
+                  item={item}
+                  updateQty={updateQty}
+                  removeItem={removeItem}
+                />
+              ))}
             </div>
+
+            {/* SUMMARY */}
+            <div className="lg:col-span-4">
+              <OrderSummary
+                subtotal={subtotal}
+                tax={tax}
+                total={total}
+                count={items.length}
+              />
+            </div>
+
           </div>
-        </div>
+        )}
       </div>
     </main>
   );
