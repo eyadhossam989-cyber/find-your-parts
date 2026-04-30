@@ -34,6 +34,8 @@ export default function CartPage() {
         <div className="text-center">
           <h2 className="text-5xl font-extrabold text-[#101b2d] mb-4">Your Cart is Empty</h2>
           <p className="text-gray-600 mb-8">Looks like you haven't added any upgrades yet.</p>
+          
+          {/* FIXED: Link now points correctly to /parts */}
           <Link 
             href="/parts" 
             className="bg-[#e8a88a] text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:bg-[#d4977d] transition-all"
