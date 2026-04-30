@@ -1,115 +1,70 @@
 "use client";
-
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import Link from "next/link";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-
-  async function handleLogin() {
-    setLoading(true);
-    setMessage("");
-
-    if (!email || !password) {
-      setMessage("Please enter your email and password.");
-      setLoading(false);
-      return;
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // For the demo: If they log in, we'll give them a professional name 
+    // unless they already signed up with one.
+    const existingName = localStorage.getItem("fyp-user-name");
+    if (!existingName) {
+      localStorage.setItem("fyp-user-name", "M4 Enthusiast");
     }
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setMessage(error.message);
-      setLoading(false);
-      return;
-    }
-
-    router.push("/account");
-  }
+    
+    router.push("/parts");
+  };
 
   return (
-    <main className="min-h-screen flex bg-[#f5f6f8]">
-      <div className="hidden lg:flex w-1/2 bg-[#101b2d] relative items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#101b2d] via-[#101b2d]/90 to-black" />
-
-        <div className="relative z-10 text-white max-w-md">
-          <h1 className="text-6xl font-extrabold mb-4">
+    <main className="min-h-screen bg-[#f5f6f8] flex items-center justify-center p-6">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-10 border border-gray-100">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-black text-[#101b2d] tracking-tighter">
             F<span className="text-[#e8a88a]">Y</span>P
           </h1>
-
-          <p className="text-xl text-slate-300">
-            Find Your Parts. Premium automotive components for professionals.
-          </p>
-
-          <div className="mt-8 space-y-3">
-            <p>✔ Guaranteed Fitment</p>
-            <p>✔ Fast Delivery</p>
-            <p>✔ Premium OEM Quality</p>
-          </div>
+          <p className="text-gray-500 font-bold mt-2">Welcome back, Captain.</p>
         </div>
-      </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl">
-          <h2 className="text-4xl font-extrabold text-[#101b2d] mb-2">
-            F<span className="text-[#e8a88a]">Y</span>P
-          </h2>
-
-          <p className="text-gray-600 mb-6">Sign in to your account</p>
-
-          <div className="space-y-4">
-            <input
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div>
+            <label className="text-xs font-black uppercase text-gray-400 ml-1">Email</label>
+            <input 
               type="email"
-              placeholder="Email"
-              className="w-full border rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-[#e8a88a]"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full border border-gray-200 rounded-xl p-4 mt-1 outline-none focus:ring-2 focus:ring-[#e8a88a] transition" 
+              placeholder="driver@fyp.com" 
             />
-
-            <input
+          </div>
+          <div>
+            <div className="flex justify-between items-center ml-1">
+              <label className="text-xs font-black uppercase text-gray-400">Password</label>
+              <Link href="#" className="text-[10px] font-black text-[#e8a88a] uppercase">Forgot?</Link>
+            </div>
+            <input 
               type="password"
-              placeholder="Password"
-              className="w-full border rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-[#e8a88a]"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full border border-gray-200 rounded-xl p-4 mt-1 outline-none focus:ring-2 focus:ring-[#e8a88a] transition" 
+              placeholder="••••••••" 
             />
           </div>
 
-          {message && (
-            <p className="mt-4 text-sm font-bold text-red-500">{message}</p>
-          )}
-
-          <button
-            onClick={handleLogin}
-            disabled={loading}
-            className="w-full bg-[#e8a88a] text-white py-4 rounded-xl font-extrabold mt-6 block text-center hover:scale-[1.02] transition disabled:opacity-60"
+          <button 
+            type="submit"
+            className="w-full bg-[#101b2d] text-white py-4 rounded-xl font-black mt-2 hover:bg-black transition-all shadow-lg active:scale-95"
           >
-            {loading ? "Signing In..." : "Sign In →"}
+            Secure Login →
           </button>
+        </form>
 
-          <div className="text-center mt-6 text-gray-600">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-[#e8a88a] font-extrabold">
-              Create one
-            </Link>
-          </div>
-
-          <div className="text-center mt-3">
-            <Link href="/" className="text-sm text-gray-400 hover:text-black">
-              ← Back to Home
-            </Link>
-          </div>
+        <div className="mt-8 pt-8 border-t border-gray-100">
+          <p className="text-center text-sm text-gray-500 font-bold">
+            New to the platform? <Link href="/signup" className="text-[#e8a88a] hover:underline">Join FYP</Link>
+          </p>
         </div>
       </div>
     </main>
