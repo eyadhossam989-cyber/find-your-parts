@@ -10,7 +10,7 @@ export default function CartPage() {
       category: "Braking System",
       price: 299,
       quantity: 1,
-      image: "/images/brake-pads.webp" 
+      image: "/images/brake-pad.jpg" 
     },
     {
       id: "p2",
@@ -18,7 +18,7 @@ export default function CartPage() {
       category: "Maintenance",
       price: 45,
       quantity: 1,
-      image: "/images/oil-filter.webp"
+      image: "/images/oil-filter.jpg"
     }
   ];
 
