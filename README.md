@@ -1,36 +1,23 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏎️ FYP - Find Your Parts
 
-## Getting Started
+FYP is a high-performance e-commerce dashboard for automotive enthusiasts. It allows users to manage their garage, find vehicle-specific parts, and handle a shopping cart with real-time updates.
 
-First, run the development server:
+## 🚀 Live Link
+**[View the Live Project Here]
+https://find-your-parts-ten.vercel.app/
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🛠️ Key Features
+* **Interactive Shopping Cart:** Add or remove items (like Carbon-Ceramic Brake Pads) with instant price and tax calculations.
+* **Dynamic Garage:** Toggle between different vehicles to ensure "Perfect Fit" part compatibility.
+* **User Authentication:** Integrated with **Supabase** for secure user login and data management.
+* **Modern UI:** Built with a "dark mode" aesthetic using **Tailwind CSS** for a professional, automotive feel.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 💻 Technical Setup
+* **Framework:** Next.js 14 (App Router)
+* **State Management:** React `useState` for interactive cart logic.
+* **Deployment:** Vercel (Continuous Deployment via GitHub).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📦 How to Run Locally
+1. Clone the repository.
+2. Run `npm install` to grab the dependencies.
+3. Run `npm run dev` to start the local server at `localhost:3000`.
