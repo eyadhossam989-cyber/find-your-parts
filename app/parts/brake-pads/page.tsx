@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function BrakePadsPage() {
   const thumbnails = [
-    "/images/brake-pad.jpg",
+    "/images/brake-pads.jpg",
     "/images/spark-plug.jpg",
     "/images/motor-oil.jpg",
     "/images/cabin-filter.jpg",
@@ -46,7 +46,7 @@ export default function BrakePadsPage() {
 
             <div className="flex-1 bg-white rounded-2xl shadow p-10 flex items-center justify-center">
               <img
-                src="/images/brake-pad.jpg"
+                src="/images/brake-pads.jpg"
                 alt="FYP Ceramic Brake Pads"
                 className="max-h-[520px] object-contain rounded-xl"
               />
@@ -189,7 +189,7 @@ export default function BrakePadsPage() {
               miles.
             </p>
             <img
-              src="/images/brake-pad.jpg"
+              src="/images/brake-pads.jpg"
               alt="Brake pad"
               className="absolute right-[-20px] bottom-[-20px] w-44 opacity-30"
             />

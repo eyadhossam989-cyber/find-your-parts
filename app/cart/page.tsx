@@ -3,173 +3,173 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<any[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  const defaultItems = [
+  // 1. Initial State - Using numbers for price so math works
+  const [items, setItems] = useState([
     {
-      id: "p1",
-      name: "High-Performance Brake Pads",
-      price: 299,
-      quantity: 1,
-      image: "/brake-pad.png" 
+      id: 1,
+      name: "Carbon-Ceramic Brake Pad Kit",
+      sku: "BP-992-G82-OEM",
+      price: 449.00,
+      qty: 1,
+      image: "/images/brake-pads.jpg",
     },
     {
-      id: "p2",
-      name: "Synthetic Oil Filter",
-      price: 45,
-      quantity: 1,
-      image: "/oil-filter.png"
-    }
+      id: 2,
+      name: "Performance Synthetic Oil Filter",
+      sku: "OF-M-FILTER-PRO",
+      price: 24.95,
+      qty: 2,
+      image: "/images/oil-filter.jpg",
+    },
+  ]);
+
+  const suggestions = [
+    { name: "5W-30 Full Synthetic Motor Oil", price: "$58.00", tag: "Best Seller", image: "/images/motor-oil.jpg" },
+    { name: "Iridium High-Performance Spark Plug", price: "$18.50", tag: "Performance", image: "/images/spark-plug.jpg" },
+    { name: "All-Weather Heavy Duty Floor Mats", price: "$129.99", tag: "In Stock", image: "/images/floor-mat.jpg" },
+    { name: "Activated Carbon Cabin Air Filter", price: "$34.20", tag: "Maintenance", image: "/images/cabin-filter.jpg" },
   ];
 
+  // 2. THE FIX: Save to memory whenever items change
   useEffect(() => {
-    const savedCart = localStorage.getItem("fyp-cart");
-    try {
-      if (savedCart) {
-        const parsed = JSON.parse(savedCart);
-        // Ensure parsed data has numeric values to prevent NaN
-        const validated = parsed.map((item: any) => ({
-          ...item,
-          price: Number(item.price) || 0,
-          quantity: Number(item.quantity) || 1
-        }));
-        setCartItems(validated.length > 0 ? validated : defaultItems);
-      } else {
-        setCartItems(defaultItems);
-      }
-    } catch (error) {
-      setCartItems(defaultItems);
-    }
-    setIsLoaded(true);
-  }, []);
+    localStorage.setItem("fyp-cart", JSON.stringify(items));
+  }, [items]);
 
-  const updateQuantity = (id: string, delta: number) => {
-    const updated = cartItems.map(item => {
-      if (item.id === id) {
-        const newQty = Math.max(1, (Number(item.quantity) || 1) + delta);
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    });
-    setCartItems(updated);
-    localStorage.setItem("fyp-cart", JSON.stringify(updated));
-    window.dispatchEvent(new Event("storage"));
+  // 3. Logic Functions
+  const updateQty = (id: number, delta: number) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, qty: Math.max(1, item.qty + delta) } : item
+    ));
   };
 
-  const removeItem = (id: string) => {
-    const updated = cartItems.filter(item => item.id !== id);
-    setCartItems(updated);
-    localStorage.setItem("fyp-cart", JSON.stringify(updated));
-    window.dispatchEvent(new Event("storage"));
+  const removeItem = (id: number) => {
+    setItems(items.filter(item => item.id !== id));
   };
 
-  // Math Fix: Reduce function with initial value of 0 to prevent NaN
-  const subtotal = cartItems.reduce((acc, item) => {
-    const itemPrice = Number(item.price) || 0;
-    const itemQty = Number(item.quantity) || 0;
-    return acc + (itemPrice * itemQty);
-  }, 0);
-  
+  const subtotal = items.reduce((acc, item) => acc + (item.price * item.qty), 0);
   const tax = subtotal * 0.08;
   const total = subtotal + tax;
 
-  if (!isLoaded) return null;
-
   return (
-    <main className="min-h-screen bg-[#F3F4F6] p-4 md:p-12 font-sans">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-black mb-10 text-slate-900 tracking-tighter">
-          Shopping Cart ({cartItems.length})
-        </h1>
+    <main className="min-h-screen bg-[#f5f6f8] text-[#101827]">
+      <section className="max-w-[1280px] mx-auto p-8">
+        
+        {/* Banner Mannerism */}
+        <div className="bg-[#101b2d] text-white rounded-2xl p-5 mb-8 flex justify-between items-center shadow">
+          <div>
+            <p className="text-slate-300 text-sm">Current Vehicle</p>
+            <h2 className="font-bold">2021 BMW M4 Competition</h2>
+            <p className="text-slate-300 text-sm">G82 • Perfect fit enabled</p>
+          </div>
+          <Link href="/garage" className="border border-slate-600 px-5 py-2 rounded-lg font-bold">
+            Change Vehicle
+          </Link>
+        </div>
 
-        <div className="flex flex-col lg:flex-row gap-10">
-          {/* Left Column: Parts List */}
-          <div className="flex-1 space-y-6">
-            {cartItems.map((item) => (
-              <div key={item.id} className="bg-white rounded-[2rem] p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm border border-slate-100">
-                
-                {/* Fail-Safe Image Container */}
-                <div className="w-40 h-40 bg-slate-50 rounded-3xl flex items-center justify-center p-4 border border-slate-100 overflow-hidden shrink-0">
-                  <img 
-                    src={item.image} 
-                    alt={item.name}
-                    className="w-full h-full object-contain"
-                    // If image fails, use a clean UI Avatar placeholder
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=f1f5f9&color=64748b&size=200&bold=true`;
-                    }}
-                  />
-                </div>
+        <h2 className="text-4xl font-extrabold mb-6">Shopping Cart ({items.length})</h2>
 
-                <div className="flex-1 w-full">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-2xl font-black text-slate-800 tracking-tight">{item.name}</h3>
-                      <p className="text-emerald-500 text-xs font-black uppercase tracking-widest mt-1">
-                        • Perfect fit for your vehicle
-                      </p>
-                    </div>
-                    <span className="text-2xl font-black text-slate-900 tracking-tighter">
-                      ${(Number(item.price) * (Number(item.quantity) || 1)).toLocaleString()}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center mt-8">
-                    {/* Counter UI */}
-                    <div className="flex items-center bg-slate-100 rounded-2xl p-1.5 border border-slate-200">
-                      <button onClick={() => updateQuantity(item.id, -1)} className="w-10 h-10 flex items-center justify-center font-black text-slate-500 hover:bg-white rounded-xl transition-all">−</button>
-                      <span className="w-12 text-center font-black text-slate-900">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, 1)} className="w-10 h-10 flex items-center justify-center font-black text-slate-500 hover:bg-white rounded-xl transition-all">+</button>
-                    </div>
-                    
-                    <button onClick={() => removeItem(item.id)} className="text-slate-300 font-bold hover:text-red-500 uppercase text-[10px] tracking-[0.2em] transition-colors">
-                      Remove Part
-                    </button>
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8 space-y-6">
+            {items.length === 0 ? (
+              <div className="bg-white p-12 rounded-2xl text-center shadow-sm">
+                <p className="text-xl font-bold text-gray-400">Your cart is currently empty.</p>
+                <Link href="/shop" className="text-[#e8a88a] font-bold mt-2 block">Browse Parts →</Link>
               </div>
-            ))}
+            ) : (
+              items.map((item) => (
+                <div key={item.id} className="bg-white rounded-2xl shadow-sm p-6 flex gap-6 items-center border border-gray-50">
+                  <img src={item.image} alt={item.name} className="w-32 h-32 object-cover rounded-xl bg-gray-100" />
+                  <div className="flex-1">
+                    <div className="flex justify-between">
+                      <div>
+                        <h3 className="text-xl font-extrabold text-black">{item.name}</h3>
+                        <p className="text-gray-600 text-sm">{item.sku}</p>
+                      </div>
+                      <p className="text-[#e8a88a] font-extrabold text-xl">${item.price.toFixed(2)}</p>
+                    </div>
+                    <p className="text-green-600 text-sm font-bold mt-3">● Perfect fit for your vehicle</p>
+                    <div className="flex justify-between items-center mt-5">
+                      <div className="bg-gray-100 rounded-lg flex items-center">
+                        <button onClick={() => updateQty(item.id, -1)} className="px-4 py-2 font-bold hover:bg-gray-200 transition">−</button>
+                        <span className="px-4 font-bold">{item.qty}</span>
+                        <button onClick={() => updateQty(item.id, 1)} className="px-4 py-2 font-bold hover:bg-gray-200 transition">+</button>
+                      </div>
+                      <button onClick={() => removeItem(item.id)} className="text-gray-400 hover:text-red-600 font-semibold transition">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
-          {/* Right Column: Order Summary */}
-          <div className="w-full lg:w-[400px]">
-            <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 sticky top-10">
-              <h2 className="text-xl font-black mb-10 text-slate-900 tracking-tight border-b border-slate-50 pb-6">
-                Order Summary ({cartItems.length})
-              </h2>
-              
-              <div className="space-y-5 mb-8">
-                <div className="flex justify-between text-slate-400 font-bold text-[11px] uppercase tracking-widest">
+          <aside className="lg:col-span-4">
+            <div className="bg-white rounded-2xl shadow p-6 sticky top-24 border border-gray-100">
+              <h3 className="text-2xl font-extrabold mb-6">Order Summary</h3>
+              <div className="space-y-4 text-gray-700">
+                <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span className="text-slate-900">${subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                  <b className="text-black">${subtotal.toFixed(2)}</b>
                 </div>
-                <div className="flex justify-between text-slate-400 font-bold text-[11px] uppercase tracking-widest">
+                <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span className="text-emerald-500 font-black italic">FREE</span>
+                  <b className="text-green-600">FREE</b>
                 </div>
-                <div className="flex justify-between text-slate-400 font-bold text-[11px] uppercase tracking-widest">
-                  <span>Tax (8%)</span>
-                  <span className="text-slate-900">${tax.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                <div className="flex justify-between">
+                  <span>Taxes</span>
+                  <b className="text-black">${tax.toFixed(2)}</b>
                 </div>
-              </div>
-
-              <div className="border-t border-slate-100 pt-8 mb-10">
-                <div className="flex justify-between items-end">
-                  <span className="text-lg font-black text-slate-900 uppercase tracking-tighter">Total Amount</span>
-                  <span className="text-4xl font-black text-slate-900 tracking-tighter">
-                    ${total.toLocaleString(undefined, {minimumFractionDigits: 2})}
-                  </span>
+                <div className="border-t pt-4 flex justify-between text-xl">
+                  <span className="font-extrabold">Total</span>
+                  <span className="font-extrabold text-[#101b2d]">${total.toFixed(2)}</span>
                 </div>
               </div>
 
-              <Link href="/checkout" className="group block w-full bg-[#E8A88A] text-white text-center py-6 rounded-3xl font-black text-sm uppercase tracking-[0.2em] hover:bg-slate-900 transition-all duration-500 shadow-xl shadow-orange-100 active:scale-[0.98]">
+              <div className="mt-6">
+                <label className="text-xs font-bold text-gray-600 uppercase">Discount Code</label>
+                <div className="flex gap-2 mt-2">
+                  <input className="border rounded-lg px-4 py-2 flex-1 outline-none" placeholder="Enter code" />
+                  <button className="bg-[#101b2d] text-white px-4 rounded-lg font-bold hover:bg-black transition">Apply</button>
+                </div>
+              </div>
+
+              {/* Glowing Button Logic */}
+              <Link
+                href="/checkout"
+                className={`w-full mt-6 py-4 rounded-xl font-extrabold text-lg block text-center transition-all duration-300
+                  ${items.length > 0 
+                    ? "bg-[#e8a88a] text-white shadow-[0_0_20px_rgba(232,168,138,0.3)] hover:shadow-[0_0_30px_rgba(232,168,138,0.5)] scale-[1.01]" 
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
+              >
                 Proceed to Checkout →
               </Link>
             </div>
-          </div>
+          </aside>
         </div>
-      </div>
+
+        {/* Suggestions Section Mannerism */}
+        <section className="mt-12">
+          <h2 className="text-2xl font-extrabold mb-6">Customers also bought</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {suggestions.map((item) => (
+              <div key={item.name} className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 hover:shadow-md transition">
+                <img src={item.image} alt={item.name} className="h-44 w-full object-cover rounded-xl bg-gray-100 mb-4" />
+                <span className="text-xs bg-[#101b2d] text-white px-3 py-1 rounded-full font-bold">{item.tag}</span>
+                <h4 className="font-extrabold text-black mt-3">{item.name}</h4>
+                <p className="text-[#e8a88a] font-extrabold mt-1">{item.price}</p>
+                <button className="w-full mt-4 border rounded-lg py-2 font-bold hover:bg-gray-100 transition">Add to Cart</button>
+              </div>
+            ))}
+          </div>
+        </section>
+      </section>
+
+      {/* Footer Mannerism */}
+      <footer className="bg-[#101b2d] text-white mt-10 py-10 text-center">
+        <h3 className="text-[#e8a88a] font-extrabold text-xl">FYP</h3>
+        <p className="text-slate-400 text-sm mt-2">© 2026 Find Your Parts. Professional Grade Components.</p>
+      </footer>
     </main>
   );
 }
