@@ -2,22 +2,47 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+// Change: Import from the standard JS library instead of the broken helper
+import { createClient } from "@supabase/supabase-js";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Initialize client directly using your environment variables
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // For the demo: If they log in, we'll give them a professional name 
-    // unless they already signed up with one.
-    const existingName = localStorage.getItem("fyp-user-name");
-    if (!existingName) {
-      localStorage.setItem("fyp-user-name", "M4 Enthusiast");
+    setLoading(true);
+    setErrorMsg(null);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setErrorMsg(error.message);
+      setLoading(false);
+      return;
     }
-    
-    router.push("/parts");
+
+    if (data.user) {
+      // Set the name for your parts page UI
+      const username = data.user.user_metadata?.username || "M4 Enthusiast";
+      localStorage.setItem("fyp-user-name", username);
+      
+      router.push("/parts");
+      router.refresh();
+    }
   };
 
   return (
@@ -31,41 +56,46 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
+          {errorMsg && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-xl text-xs font-bold text-center border border-red-100">
+              {errorMsg}
+            </div>
+          )}
+
           <div>
             <label className="text-xs font-black uppercase text-gray-400 ml-1">Email</label>
             <input 
               type="email"
               required
-              className="w-full border border-gray-200 rounded-xl p-4 mt-1 outline-none focus:ring-2 focus:ring-[#e8a88a] transition" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl p-4 mt-1 outline-none focus:ring-2 focus:ring-[#e8a88a] transition text-black" 
               placeholder="driver@fyp.com" 
             />
           </div>
+          
           <div>
             <div className="flex justify-between items-center ml-1">
               <label className="text-xs font-black uppercase text-gray-400">Password</label>
-              <Link href="#" className="text-[10px] font-black text-[#e8a88a] uppercase">Forgot?</Link>
             </div>
             <input 
               type="password"
               required
-              className="w-full border border-gray-200 rounded-xl p-4 mt-1 outline-none focus:ring-2 focus:ring-[#e8a88a] transition" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl p-4 mt-1 outline-none focus:ring-2 focus:ring-[#e8a88a] transition text-black" 
               placeholder="••••••••" 
             />
           </div>
 
           <button 
             type="submit"
-            className="w-full bg-[#101b2d] text-white py-4 rounded-xl font-black mt-2 hover:bg-black transition-all shadow-lg active:scale-95"
+            disabled={loading}
+            className="w-full bg-[#101b2d] text-white py-4 rounded-xl font-black mt-2 hover:bg-black transition-all shadow-lg disabled:opacity-50"
           >
-            Secure Login →
+            {loading ? "Authenticating..." : "Secure Login →"}
           </button>
         </form>
-
-        <div className="mt-8 pt-8 border-t border-gray-100">
-          <p className="text-center text-sm text-gray-500 font-bold">
-            New to the platform? <Link href="/signup" className="text-[#e8a88a] hover:underline">Join FYP</Link>
-          </p>
-        </div>
       </div>
     </main>
   );

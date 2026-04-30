@@ -2,90 +2,136 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { createClient } from "@supabase/supabase-js";
 
-export default function SignUpPage() {
-  const [name, setName] = useState("");
+export default function SignupPage() {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  
   const router = useRouter();
 
-  const handleSignUp = (e: React.FormEvent) => {
+  // Initialize client
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name) {
-      localStorage.setItem("fyp-user-name", name);
-      router.push("/parts");
+    setLoading(true);
+    setErrorMsg(null);
+
+    // 1. Sign up the user in Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        // CRITICAL: This saves the username to the user's metadata
+        data: {
+          username: username,
+        },
+        // Ensures they return to your Vercel site after email confirm
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      setErrorMsg(error.message);
+      setLoading(false);
+      return;
     }
+
+    // 2. Success! 
+    setLoading(false);
+    setSuccess(true);
+    
+    // Optional: Save to localStorage for immediate UI feedback
+    localStorage.setItem("fyp-user-name", username);
+
+    // If you have "Confirm Email" OFF in Supabase, redirect immediately
+    // If it's ON, they need to check their email first.
+    setTimeout(() => {
+        router.push("/parts");
+    }, 2000);
   };
 
   return (
-    // min-h-[calc(100vh-96px)] ensures it fits perfectly under your 24px (h-24) Navbar
-    <main className="min-h-[calc(100vh-96px)] bg-[#f5f6f8] flex items-center justify-center p-4">
-      <div className="max-w-[450px] w-full bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-10 border border-gray-100 animate-in fade-in zoom-in duration-500">
-        
-        {/* Logo & Header */}
-        <div className="text-center mb-10">
-          <div className="inline-block mb-4">
-            <h1 className="text-5xl font-black text-[#101b2d] tracking-tighter">
-              F<span className="text-[#e8a88a]">Y</span>P
-            </h1>
-          </div>
-          <h2 className="text-2xl font-extrabold text-[#101b2d]">Create Account</h2>
-          <p className="text-gray-400 font-bold text-sm mt-1">Join the professional parts network</p>
+    <main className="min-h-screen bg-[#f5f6f8] flex items-center justify-center p-6 text-black">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-10 border border-gray-100">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-black text-[#101b2d] tracking-tighter">
+            JOIN <span className="text-[#e8a88a]">FYP</span>
+          </h1>
+          <p className="text-gray-500 font-bold mt-2">Start your performance journey.</p>
         </div>
 
-        <form onSubmit={handleSignUp} className="space-y-5">
-          {/* Full Name Input */}
-          <div className="group">
-            <label className="text-[10px] font-black uppercase text-gray-400 ml-4 mb-1 block tracking-widest">
-              Full Name
-            </label>
-            <input 
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-[#f5f6f8] border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a] transition-all font-bold text-[#101b2d] placeholder:text-gray-300" 
-              placeholder="e.g. Alex M-Power" 
-            />
+        {success ? (
+          <div className="text-center space-y-4">
+            <div className="bg-emerald-50 text-emerald-600 p-4 rounded-2xl font-bold">
+              Account created successfully! Redirecting...
+            </div>
           </div>
+        ) : (
+          <form onSubmit={handleSignup} className="space-y-5">
+            {errorMsg && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-xs font-bold text-center border border-red-100">
+                {errorMsg}
+              </div>
+            )}
 
-          {/* Email Input */}
-          <div className="group">
-            <label className="text-[10px] font-black uppercase text-gray-400 ml-4 mb-1 block tracking-widest">
-              Email Address
-            </label>
-            <input 
-              type="email"
-              required
-              className="w-full bg-[#f5f6f8] border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a] transition-all font-bold text-[#101b2d] placeholder:text-gray-300" 
-              placeholder="alex@m-series.com" 
-            />
-          </div>
+            <div>
+              <label className="text-xs font-black uppercase text-gray-400 ml-1">Username</label>
+              <input 
+                type="text"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl p-4 mt-1 outline-none focus:ring-2 focus:ring-[#e8a88a] transition" 
+                placeholder="M4_Enthusiast" 
+              />
+            </div>
 
-          {/* Password Input */}
-          <div className="group">
-            <label className="text-[10px] font-black uppercase text-gray-400 ml-4 mb-1 block tracking-widest">
-              Password
-            </label>
-            <input 
-              type="password"
-              required
-              className="w-full bg-[#f5f6f8] border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a] transition-all font-bold text-[#101b2d] placeholder:text-gray-300" 
-              placeholder="••••••••" 
-            />
-          </div>
+            <div>
+              <label className="text-xs font-black uppercase text-gray-400 ml-1">Email</label>
+              <input 
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl p-4 mt-1 outline-none focus:ring-2 focus:ring-[#e8a88a] transition" 
+                placeholder="driver@fyp.com" 
+              />
+            </div>
+            
+            <div>
+              <label className="text-xs font-black uppercase text-gray-400 ml-1">Password</label>
+              <input 
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl p-4 mt-1 outline-none focus:ring-2 focus:ring-[#e8a88a] transition" 
+                placeholder="••••••••" 
+              />
+            </div>
 
-          {/* Submit Button */}
-          <button 
-            type="submit"
-            className="w-full bg-[#101b2d] text-white py-5 rounded-2xl font-black mt-4 hover:bg-black transition-all shadow-xl shadow-[#101b2d]/10 active:scale-[0.98] flex items-center justify-center gap-2"
-          >
-            Start Building <span>🚀</span>
-          </button>
-        </form>
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#101b2d] text-white py-4 rounded-xl font-black mt-2 hover:bg-black transition-all shadow-lg active:scale-95 disabled:opacity-50"
+            >
+              {loading ? "Creating Account..." : "Create Account →"}
+            </button>
+          </form>
+        )}
 
-        {/* Footer Link */}
-        <div className="mt-10 pt-8 border-t border-gray-50 text-center">
-          <p className="text-sm text-gray-400 font-bold">
-            Already a member? <Link href="/login" className="text-[#e8a88a] hover:underline ml-1">Log In →</Link>
+        <div className="mt-8 pt-8 border-t border-gray-100">
+          <p className="text-center text-sm text-gray-500 font-bold">
+            Already have an account? <Link href="/login" className="text-[#e8a88a] hover:underline">Log In</Link>
           </p>
         </div>
       </div>
