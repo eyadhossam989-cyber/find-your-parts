@@ -3,19 +3,42 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 export default function CartPage() {
+  // Hardcoded initial items to ensure the page is never "dead" on refresh
+  const defaultItems = [
+    {
+      id: "p1",
+      name: "High-Performance Brake Pads",
+      category: "Braking System",
+      price: 299,
+      quantity: 1,
+      image: "/images/brake-pads.webp" // Ensure these paths match your public folder
+    },
+    {
+      id: "p2",
+      name: "Synthetic Oil Filter",
+      category: "Maintenance",
+      price: 45,
+      quantity: 1,
+      image: "/images/oil-filter.webp"
+    }
+  ];
+
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load and sync cart
+  // Load cart but force the default 2 items if empty
   useEffect(() => {
     const savedCart = localStorage.getItem("fyp-cart");
-    if (savedCart) {
+    if (savedCart && JSON.parse(savedCart).length > 0) {
       setCartItems(JSON.parse(savedCart));
+    } else {
+      setCartItems(defaultItems);
+      localStorage.setItem("fyp-cart", JSON.stringify(defaultItems));
     }
     setIsLoaded(true);
   }, []);
 
-  // Professional Update Logic (Handles + / - and syncs to storage)
+  // Update Quantity & Sync Math
   const updateQuantity = (id: string, delta: number) => {
     const updatedCart = cartItems.map((item) => {
       if (item.id === id) {
@@ -36,105 +59,115 @@ export default function CartPage() {
     window.dispatchEvent(new Event("storage"));
   };
 
-  // Calculate totals based on quantity
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
+  // Live Math Calculation
+  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
   if (!isLoaded) return null;
-
-  if (cartItems.length === 0) {
-    return (
-      <main className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-8">
-        <div className="text-center bg-white p-12 rounded-[3rem] shadow-xl border border-gray-100 max-w-lg">
-          <div className="text-6xl mb-6">📦</div>
-          <h2 className="text-4xl font-black text-[#101b2d] tracking-tight mb-4">Your Cart is Empty</h2>
-          <p className="text-gray-500 font-medium mb-10">You haven't added any performance parts to your build yet.</p>
-          <Link 
-            href="/parts" 
-            className="bg-[#101b2d] text-white px-10 py-4 rounded-2xl font-bold hover:bg-[#e8a88a] transition-all shadow-lg inline-block"
-          >
-            Explore Catalog
-          </Link>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className="min-h-screen bg-[#f8fafc] py-16 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-12">
-          <h1 className="text-5xl font-black text-[#101b2d] tracking-tighter">Your <span className="text-[#e8a88a]">Build</span></h1>
-          <span className="bg-white px-6 py-2 rounded-full border border-gray-200 font-bold text-sm text-gray-500 shadow-sm">
-            {cartItems.length} ITEMS
-          </span>
+          <h1 className="text-5xl font-black text-[#101b2d] tracking-tighter">
+            Your <span className="text-[#e8a88a]">Build</span>
+          </h1>
+          <div className="flex items-center gap-4">
+             <span className="bg-white px-6 py-2 rounded-full border border-gray-200 font-bold text-sm text-gray-500 shadow-sm">
+              {cartItems.length} {cartItems.length === 1 ? 'PART' : 'PARTS'}
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* Cart Items List */}
           <div className="lg:col-span-8 space-y-6">
             {cartItems.map((item) => (
-              <div key={item.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-8 group transition-all hover:shadow-md">
-                <div className="w-28 h-28 bg-gray-50 rounded-2xl overflow-hidden p-2">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-contain mix-blend-multiply" />
+              <div key={item.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-8 transition-all hover:shadow-md group">
+                <div className="w-28 h-28 bg-gray-50 rounded-2xl overflow-hidden p-2 flex items-center justify-center">
+                  <img 
+                    src={item.image} 
+                    alt={item.name} 
+                    className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform" 
+                  />
                 </div>
 
-                <div className="flex-1">
+                <div className="flex-1 text-center md:text-left">
                   <p className="text-[#e8a88a] text-[10px] font-black uppercase tracking-widest mb-1">{item.category}</p>
-                  <h3 className="text-xl font-black text-[#101b2d]">{item.name}</h3>
-                  <button onClick={() => removeItem(item.id)} className="text-red-400 text-xs font-bold mt-2 hover:text-red-600 transition-colors">REMOVE PART</button>
+                  <h3 className="text-xl font-black text-[#101b2d] leading-tight">{item.name}</h3>
+                  <button 
+                    onClick={() => removeItem(item.id)} 
+                    className="text-red-400 text-[10px] font-black mt-3 hover:text-red-600 tracking-widest transition-colors uppercase"
+                  >
+                    Remove Part
+                  </button>
                 </div>
 
-                {/* THE COUNTER: Professional +/- Control */}
-                <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-2xl border border-gray-100">
+                {/* THE COUNTER: Professional Controls */}
+                <div className="flex items-center gap-4 bg-gray-100 p-1.5 rounded-2xl border border-gray-200">
                   <button 
                     onClick={() => updateQuantity(item.id, -1)}
-                    className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm hover:text-[#e8a88a] font-bold"
-                  >—</button>
-                  <span className="w-8 text-center font-black text-[#101b2d]">{item.quantity || 1}</span>
+                    className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm hover:text-[#e8a88a] font-black text-lg transition-all active:scale-90"
+                  >
+                    −
+                  </button>
+                  <span className="w-8 text-center font-black text-[#101b2d]">{item.quantity}</span>
                   <button 
                     onClick={() => updateQuantity(item.id, 1)}
-                    className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm hover:text-[#e8a88a] font-bold"
-                  >+</button>
+                    className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm hover:text-[#e8a88a] font-black text-lg transition-all active:scale-90"
+                  >
+                    +
+                  </button>
                 </div>
 
-                <div className="text-right min-w-[100px]">
-                  <p className="text-2xl font-black text-[#101b2d]">${(item.price * (item.quantity || 1)).toLocaleString()}</p>
+                <div className="text-right min-w-[120px]">
+                  <p className="text-2xl font-black text-[#101b2d]">
+                    ${(item.price * item.quantity).toLocaleString()}
+                  </p>
                 </div>
               </div>
             ))}
+            
+            <Link 
+              href="/parts" 
+              className="inline-flex items-center gap-2 text-sm font-black text-[#101b2d]/50 hover:text-[#e8a88a] transition-colors mt-4 uppercase tracking-widest"
+            >
+              ← Back to Catalog
+            </Link>
           </div>
 
           {/* Checkout Panel */}
           <div className="lg:col-span-4 sticky top-32">
-            <div className="bg-[#101b2d] p-10 rounded-[3rem] text-white shadow-2xl">
-              <h2 className="text-2xl font-black mb-8">Summary</h2>
+            <div className="bg-[#101b2d] p-10 rounded-[3rem] text-white shadow-2xl border border-white/5">
+              <h2 className="text-2xl font-black mb-8 tracking-tight">Order Summary</h2>
               
-              <div className="space-y-4 mb-10">
-                <div className="flex justify-between font-bold text-gray-400">
+              <div className="space-y-5 mb-10">
+                <div className="flex justify-between font-bold text-gray-400 text-sm">
                   <span>Subtotal</span>
                   <span className="text-white">${subtotal.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between font-bold text-gray-400">
-                  <span>Tax (Estimated)</span>
-                  <span className="text-white">$0.00</span>
+                <div className="flex justify-between font-bold text-gray-400 text-sm">
+                  <span>Shipping</span>
+                  <span className="text-[#e8a88a]">Calculated at Checkout</span>
                 </div>
                 <div className="h-[1px] bg-white/10 my-6" />
                 <div className="flex justify-between items-end">
-                  <span className="font-bold text-gray-400 text-sm">TOTAL COST</span>
-                  <span className="text-4xl font-black text-[#e8a88a] leading-none">${subtotal.toLocaleString()}</span>
+                  <span className="font-bold text-gray-400 text-xs uppercase tracking-widest">Grand Total</span>
+                  <span className="text-4xl font-black text-[#e8a88a] leading-none tracking-tighter">
+                    ${subtotal.toLocaleString()}
+                  </span>
                 </div>
               </div>
 
               <Link 
                 href="/checkout"
-                className="block w-full bg-white text-[#101b2d] text-center py-5 rounded-2xl font-black text-lg hover:bg-[#e8a88a] hover:text-white transition-all active:scale-95 shadow-xl"
+                className="block w-full bg-[#e8a88a] text-[#101b2d] text-center py-5 rounded-2xl font-black text-lg hover:bg-white transition-all active:scale-95 shadow-xl uppercase tracking-tighter"
               >
-                PROCEED TO CHECKOUT
+                Proceed to Checkout
               </Link>
               
-              <Link href="/parts" className="block text-center mt-6 text-xs font-bold text-gray-500 hover:text-white transition-colors">
-                ← ADD MORE PARTS
-              </Link>
+              <div className="mt-8 flex items-center justify-center gap-2 opacity-30">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Secure Encryption Active</span>
+              </div>
             </div>
           </div>
         </div>
