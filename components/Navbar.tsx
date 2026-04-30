@@ -5,14 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 
 export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [username, setUsername] = useState("Guest"); // Default state
+  const [username, setUsername] = useState("Guest");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
 
   const isActive = (path: string) => pathname === path;
 
-  // 1. DYNAMIC LOGIC: Grab the name you set during Sign In
+  // Sync username from localStorage
   useEffect(() => {
     const savedName = localStorage.getItem("fyp-user-name");
     if (savedName) {
@@ -32,7 +32,7 @@ export default function Navbar() {
   }, []);
 
   const handleSignOut = () => {
-    localStorage.removeItem("fyp-user-name"); // Clear the name on sign out
+    localStorage.removeItem("fyp-user-name");
     setIsDropdownOpen(false);
     router.push("/signup");
   };
@@ -87,7 +87,6 @@ export default function Navbar() {
             <div className="w-6 h-6 rounded-full bg-[#e8a88a] flex items-center justify-center text-[10px] text-[#101b2d]">
               👤
             </div>
-            {/* THIS TEXT IS NOW DYNAMIC */}
             <span className="text-sm truncate max-w-[100px]">{username}</span>
             <span className={`text-[10px] transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
           </button>
@@ -99,17 +98,29 @@ export default function Navbar() {
                 <p className="text-sm font-bold text-[#101b2d] truncate">{username}</p>
               </div>
 
-              <Link href="/account" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#e8a88a]">
-                <span>👤</span> Settings
+              {/* UPDATED: "Settings" is now "Account Page" */}
+              <Link 
+                href="/account" 
+                onClick={() => setIsDropdownOpen(false)} 
+                className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#e8a88a] transition-colors"
+              >
+                <span>👤</span> Account Page
               </Link>
               
-              <Link href="/login" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#e8a88a]">
+              <Link 
+                href="/login" 
+                onClick={() => setIsDropdownOpen(false)} 
+                className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#e8a88a] transition-colors"
+              >
                 <span>🔑</span> Switch Account
               </Link>
 
               <div className="h-[1px] bg-gray-100 my-1 mx-2" />
 
-              <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors text-left">
+              <button 
+                onClick={handleSignOut} 
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors text-left"
+              >
                 <span>🚪</span> Sign Out
               </button>
             </div>
