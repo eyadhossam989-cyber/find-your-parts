@@ -2,56 +2,50 @@
 import Link from "next/link";
 
 export default function PartsPage() {
-  const products = [
-    {
-      name: "Carbon-Ceramic Brake Pads",
-      price: "$89.99",
-      image: "/images/brake-pads.jpg",
-      link: "/parts/brake-pads",
-      tag: "Best Seller",
-      color: "from-orange-500 to-red-600",
-    },
-    {
-      name: "Performance Spark Plug",
-      price: "$18.50",
-      image: "/images/spark-plug.jpg",
-      link: "/parts/brake-pads",
-      tag: "Performance",
-      color: "from-blue-500 to-indigo-600",
-    },
-    {
-      name: "Premium Motor Oil",
-      price: "$58.00",
-      image: "/images/motor-oil.jpg",
-      link: "/parts/brake-pads",
-      tag: "Top Rated",
-      color: "from-emerald-500 to-teal-600",
-    },
-    {
-      name: "Heavy Duty Oil Filter",
-      price: "$24.00",
-      image: "/images/oil-filter.jpg",
-      link: "/parts/brake-pads",
-      tag: "In Stock",
-      color: "from-purple-500 to-pink-600",
-    },
-    {
-      name: "Air Intake Filter",
-      price: "$34.00",
-      image: "/images/cabin-filter.jpg",
-      link: "/parts/brake-pads",
-      tag: "Maintenance",
-      color: "from-amber-400 to-orange-500",
-    },
-    {
-      name: "All-Weather Floor Mat",
-      price: "$129.00",
-      image: "/images/floor-mat.jpg",
-      link: "/parts/brake-pads",
-      tag: "Interior",
-      color: "from-slate-500 to-slate-700",
-    },
-  ];
+const products = [
+  {
+    name: "Carbon-Ceramic Brake Pads",
+    price: "$89.99",
+    image: "/images/brake-pad.jpg",
+    link: "/parts/brake-pads",
+    tag: "Best Seller",
+  },
+  {
+    name: "Performance Spark Plug",
+    price: "$18.50",
+    image: "/images/spark-plug.jpg",
+    link: "/parts/spark-plug",
+    tag: "Performance",
+  },
+  {
+    name: "Premium Motor Oil",
+    price: "$58.00",
+    image: "/images/motor-oil.jpg",
+    link: "/parts/motor-oil",
+    tag: "Top Rated",
+  },
+  {
+    name: "Heavy Duty Oil Filter",
+    price: "$24.00",
+    image: "/images/oil-filter.jpg",
+    link: "/parts/oil-filter",
+    tag: "In Stock",
+  },
+  {
+    name: "Air Intake Filter",
+    price: "$34.00",
+    image: "/images/cabin-filter.jpg",
+    link: "/parts/air-filter",
+    tag: "Maintenance",
+  },
+  {
+    name: "All-Weather Floor Mat",
+    price: "$129.00",
+    image: "/images/floor-mat.jpg",
+    link: "/parts/floor-mat",
+    tag: "Interior",
+  },
+];
 
   return (
     <main className="min-h-screen bg-[#0a0f1a] text-white selection:bg-[#e8a88a]/30 font-sans">
