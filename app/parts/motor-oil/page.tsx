@@ -1,9 +1,9 @@
 import Link from "next/link";
- 
+
 interface Spec {
   [key: number]: string;
 }
- 
+
 export default function MotorOilPage() {
   const specs: Spec[] = [
     { 0: "Viscosity", 1: "5W-30 Synthetic Blend" },
@@ -12,7 +12,7 @@ export default function MotorOilPage() {
     { 0: "Application", 1: "All Gasoline Engines" },
     { 0: "Warranty", 1: "24 Months" },
   ];
- 
+
   return (
     <main className="min-h-screen bg-[#f5f6f8] text-[#101827]">
       <section className="max-w-[1400px] mx-auto p-8">

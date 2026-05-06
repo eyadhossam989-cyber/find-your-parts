@@ -1,12 +1,16 @@
 import Link from "next/link";
 
+interface Spec {
+  [key: number]: string;
+}
+
 export default function SparkPlugPage() {
-  const specs = [
-    ["Material", "Iridium Tip"],
-    ["Gap", "0.044 inches"],
-    ["Thread Size", "14mm"],
-    ["Hex Size", "5/8 inch"],
-    ["Warranty", "12 Months"],
+  const specs: Spec[] = [
+    { 0: "Material", 1: "Iridium Tip" },
+    { 0: "Gap", 1: "0.044 inches" },
+    { 0: "Thread Size", 1: "14mm" },
+    { 0: "Hex Size", 1: "5/8 inch" },
+    { 0: "Warranty", 1: "12 Months" },
   ];
 
   return (
@@ -42,10 +46,10 @@ export default function SparkPlugPage() {
             <button className="w-full mt-4 border-2 border-[#101b2d] text-[#101b2d] py-3 rounded-xl font-extrabold">♡ Save to Garage</button>
             <table className="w-full text-left mt-8 border-t pt-4">
               <tbody>
-                {specs.map(([label, value], i) => (
-                  <tr key={label} className={i % 2 ? "bg-gray-50" : ""}>
-                    <td className="p-3 font-bold text-gray-700">{label}</td>
-                    <td className="p-3 text-black">{value}</td>
+                {specs.map((item: any, i: number) => (
+                  <tr key={i} className={i % 2 ? "bg-gray-50" : ""}>
+                    <td className="p-3 font-bold text-gray-700">{item[0]}</td>
+                    <td className="p-3 text-black">{item[1]}</td>
                   </tr>
                 ))}
               </tbody>
