@@ -1,35 +1,35 @@
 import Link from "next/link";
 
-export default function SparkPlugPage() {
+export default function MotorOilPage() {
   const specs = [
-    ["Material", "Iridium Tip"],
-    ["Gap", "0.044 inches"],
-    ["Thread Size", "14mm"],
-    ["Hex Size", "5/8 inch"],
-    ["Warranty", "12 Months"],
+    ["Viscosity", "5W-30 Synthetic Blend"],
+    ["Capacity", "5 Quarts (4.73L)"],
+    ["API Rating", "SN Plus"],
+    ["Application", "All Gasoline Engines"],
+    ["Warranty", "24 Months"],
   ];
 
   return (
     <main className="min-h-screen bg-[#f5f6f8] text-[#101827]">
       <section className="max-w-[1400px] mx-auto p-8">
-        <p className="text-sm text-gray-600 mb-6">Home / Engine Parts / Spark Plug</p>
+        <p className="text-sm text-gray-600 mb-6">Home / Oil & Filters / Motor Oil</p>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 bg-white rounded-2xl shadow p-10 flex items-center justify-center">
-            <img src="/images/spark-plug.jpg" alt="Performance Spark Plug" className="max-h-[400px] object-contain" />
+            <img src="/images/motor-oil.jpg" alt="Premium Motor Oil" className="max-h-[400px] object-contain" />
           </div>
           <div className="lg:col-span-5 bg-white rounded-2xl shadow p-7">
             <div className="flex gap-2 mb-4">
               <span className="bg-[#101b2d] text-white px-3 py-1 rounded-full text-xs font-bold">FYP CERTIFIED</span>
               <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">IN STOCK</span>
             </div>
-            <h2 className="text-4xl font-extrabold text-[#101b2d] mt-4">Performance Spark Plug</h2>
-            <p className="text-gray-600 mt-2 font-semibold">Part # FYP-SP-2041-IR</p>
-            <p className="text-[#e8a88a] font-extrabold text-lg mt-4">★★★★★ <span className="text-black">4.7</span> <span className="text-blue-600">(134 Reviews)</span></p>
+            <h2 className="text-4xl font-extrabold text-[#101b2d] mt-4">Premium Motor Oil</h2>
+            <p className="text-gray-600 mt-2 font-semibold">Part # FYP-OL-3310-PM</p>
+            <p className="text-[#e8a88a] font-extrabold text-lg mt-4">★★★★★ <span className="text-black">4.8</span> <span className="text-blue-600">(89 Reviews)</span></p>
             <div className="bg-green-50 border border-green-200 rounded-xl p-5 mt-6">
-              <h3 className="font-extrabold text-black">Iridium Performance</h3>
-              <p className="text-gray-700">Delivers superior ignition and extended spark plug life.</p>
+              <h3 className="font-extrabold text-black">Full Synthetic Protection</h3>
+              <p className="text-gray-700">Engineered for superior engine performance and longevity.</p>
             </div>
-            <p className="text-[#e85d04] text-5xl font-extrabold mt-8">$18.50</p>
+            <p className="text-[#e85d04] text-5xl font-extrabold mt-8">$58.00</p>
             <p className="text-gray-600 mt-1">Excl. Tax & Shipping</p>
             <div className="flex gap-4 mt-8">
               <div className="bg-gray-100 rounded-xl flex items-center">

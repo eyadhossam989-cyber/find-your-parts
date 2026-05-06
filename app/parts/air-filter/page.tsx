@@ -1,35 +1,35 @@
 import Link from "next/link";
 
-export default function SparkPlugPage() {
+export default function AirFilterPage() {
   const specs = [
-    ["Material", "Iridium Tip"],
-    ["Gap", "0.044 inches"],
-    ["Thread Size", "14mm"],
-    ["Hex Size", "5/8 inch"],
+    ["Type", "Pleated Cabin Air Filter"],
+    ["Material", "High-Grade Synthetic Fiber"],
+    ["MERV Rating", "13 (Hospital Grade)"],
+    ["Dimension", "16 x 25 x 4 inches"],
     ["Warranty", "12 Months"],
   ];
 
   return (
     <main className="min-h-screen bg-[#f5f6f8] text-[#101827]">
       <section className="max-w-[1400px] mx-auto p-8">
-        <p className="text-sm text-gray-600 mb-6">Home / Engine Parts / Spark Plug</p>
+        <p className="text-sm text-gray-600 mb-6">Home / Engine Parts / Air Filter</p>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 bg-white rounded-2xl shadow p-10 flex items-center justify-center">
-            <img src="/images/spark-plug.jpg" alt="Performance Spark Plug" className="max-h-[400px] object-contain" />
+            <img src="/images/cabin-filter.jpg" alt="Air Intake Filter" className="max-h-[400px] object-contain" />
           </div>
           <div className="lg:col-span-5 bg-white rounded-2xl shadow p-7">
             <div className="flex gap-2 mb-4">
               <span className="bg-[#101b2d] text-white px-3 py-1 rounded-full text-xs font-bold">FYP CERTIFIED</span>
               <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">IN STOCK</span>
             </div>
-            <h2 className="text-4xl font-extrabold text-[#101b2d] mt-4">Performance Spark Plug</h2>
-            <p className="text-gray-600 mt-2 font-semibold">Part # FYP-SP-2041-IR</p>
-            <p className="text-[#e8a88a] font-extrabold text-lg mt-4">★★★★★ <span className="text-black">4.7</span> <span className="text-blue-600">(134 Reviews)</span></p>
+            <h2 className="text-4xl font-extrabold text-[#101b2d] mt-4">Air Intake Filter</h2>
+            <p className="text-gray-600 mt-2 font-semibold">Part # FYP-AF-0882-AI</p>
+            <p className="text-[#e8a88a] font-extrabold text-lg mt-4">★★★★★ <span className="text-black">4.6</span> <span className="text-blue-600">(203 Reviews)</span></p>
             <div className="bg-green-50 border border-green-200 rounded-xl p-5 mt-6">
-              <h3 className="font-extrabold text-black">Iridium Performance</h3>
-              <p className="text-gray-700">Delivers superior ignition and extended spark plug life.</p>
+              <h3 className="font-extrabold text-black">Hospital-Grade Filtration</h3>
+              <p className="text-gray-700">Blocks 99.97% of dust, pollen, and allergens from your cabin air.</p>
             </div>
-            <p className="text-[#e85d04] text-5xl font-extrabold mt-8">$18.50</p>
+            <p className="text-[#e85d04] text-5xl font-extrabold mt-8">$34.00</p>
             <p className="text-gray-600 mt-1">Excl. Tax & Shipping</p>
             <div className="flex gap-4 mt-8">
               <div className="bg-gray-100 rounded-xl flex items-center">

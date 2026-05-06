@@ -1,35 +1,36 @@
 import Link from "next/link";
 
-export default function SparkPlugPage() {
+export default function FloorMatPage() {
   const specs = [
-    ["Material", "Iridium Tip"],
-    ["Gap", "0.044 inches"],
-    ["Thread Size", "14mm"],
-    ["Hex Size", "5/8 inch"],
-    ["Warranty", "12 Months"],
+    ["Material", "Premium Rubber with Fabric Top"],
+    ["Coverage", "Full Front & Rear Set (4 pieces)"],
+    ["Weather Resistance", "All-Season (-40°F to 160°F)"],
+    ["Non-Slip Base", "Advanced Grip Technology"],
+    ["Warranty", "36 Months"],
   ];
 
   return (
     <main className="min-h-screen bg-[#f5f6f8] text-[#101827]">
       <section className="max-w-[1400px] mx-auto p-8">
-        <p className="text-sm text-gray-600 mb-6">Home / Engine Parts / Spark Plug</p>
+        <p className="text-sm text-gray-600 mb-6">Home / Interior / Floor Mats</p>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 bg-white rounded-2xl shadow p-10 flex items-center justify-center">
-            <img src="/images/spark-plug.jpg" alt="Performance Spark Plug" className="max-h-[400px] object-contain" />
+            <img src="/images/floor-mat.jpg" alt="All-Weather Floor Mat" className="max-h-[400px] object-contain" />
           </div>
           <div className="lg:col-span-5 bg-white rounded-2xl shadow p-7">
             <div className="flex gap-2 mb-4">
               <span className="bg-[#101b2d] text-white px-3 py-1 rounded-full text-xs font-bold">FYP CERTIFIED</span>
               <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">IN STOCK</span>
+              <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">TOP RATED</span>
             </div>
-            <h2 className="text-4xl font-extrabold text-[#101b2d] mt-4">Performance Spark Plug</h2>
-            <p className="text-gray-600 mt-2 font-semibold">Part # FYP-SP-2041-IR</p>
-            <p className="text-[#e8a88a] font-extrabold text-lg mt-4">★★★★★ <span className="text-black">4.7</span> <span className="text-blue-600">(134 Reviews)</span></p>
+            <h2 className="text-4xl font-extrabold text-[#101b2d] mt-4">All-Weather Floor Mat</h2>
+            <p className="text-gray-600 mt-2 font-semibold">Part # FYP-FM-5530-AW</p>
+            <p className="text-[#e8a88a] font-extrabold text-lg mt-4">★★★★★ <span className="text-black">4.9</span> <span className="text-blue-600">(312 Reviews)</span></p>
             <div className="bg-green-50 border border-green-200 rounded-xl p-5 mt-6">
-              <h3 className="font-extrabold text-black">Iridium Performance</h3>
-              <p className="text-gray-700">Delivers superior ignition and extended spark plug life.</p>
+              <h3 className="font-extrabold text-black">Premium Interior Protection</h3>
+              <p className="text-gray-700">Protects your vehicle interior from dirt, mud, and spills year-round.</p>
             </div>
-            <p className="text-[#e85d04] text-5xl font-extrabold mt-8">$18.50</p>
+            <p className="text-[#e85d04] text-5xl font-extrabold mt-8">$129.00</p>
             <p className="text-gray-600 mt-1">Excl. Tax & Shipping</p>
             <div className="flex gap-4 mt-8">
               <div className="bg-gray-100 rounded-xl flex items-center">
