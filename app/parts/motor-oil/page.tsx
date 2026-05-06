@@ -1,14 +1,18 @@
 import Link from "next/link";
-
+ 
+interface Spec {
+  [key: number]: string;
+}
+ 
 export default function MotorOilPage() {
-  const specs = [
-    ["Viscosity", "5W-30 Synthetic Blend"],
-    ["Capacity", "5 Quarts (4.73L)"],
-    ["API Rating", "SN Plus"],
-    ["Application", "All Gasoline Engines"],
-    ["Warranty", "24 Months"],
+  const specs: Spec[] = [
+    { 0: "Viscosity", 1: "5W-30 Synthetic Blend" },
+    { 0: "Capacity", 1: "5 Quarts (4.73L)" },
+    { 0: "API Rating", 1: "SN Plus" },
+    { 0: "Application", 1: "All Gasoline Engines" },
+    { 0: "Warranty", 1: "24 Months" },
   ];
-
+ 
   return (
     <main className="min-h-screen bg-[#f5f6f8] text-[#101827]">
       <section className="max-w-[1400px] mx-auto p-8">
@@ -42,10 +46,10 @@ export default function MotorOilPage() {
             <button className="w-full mt-4 border-2 border-[#101b2d] text-[#101b2d] py-3 rounded-xl font-extrabold">♡ Save to Garage</button>
             <table className="w-full text-left mt-8 border-t pt-4">
               <tbody>
-                {specs.map(([label, value], i) => (
-                  <tr key={label} className={i % 2 ? "bg-gray-50" : ""}>
-                    <td className="p-3 font-bold text-gray-700">{label}</td>
-                    <td className="p-3 text-black">{value}</td>
+                {specs.map((item: any, i: number) => (
+                  <tr key={i} className={i % 2 ? "bg-gray-50" : ""}>
+                    <td className="p-3 font-bold text-gray-700">{item[0]}</td>
+                    <td className="p-3 text-black">{item[1]}</td>
                   </tr>
                 ))}
               </tbody>
