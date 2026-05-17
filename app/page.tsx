@@ -19,7 +19,7 @@ const featuredCars = [
 ];
 
 const categories = [
-  ["Brake System", "brake-pad.jpg", "/parts/brake-pads"],
+  ["Brake System", "brake-pads.jpg", "/parts/brake-pads"],
   ["Engine Parts", "piston-set.jpg", "/parts"],
   ["Oil & Filters", "oil-filter.jpg", "/cart"],
 ];
