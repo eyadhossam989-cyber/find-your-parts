@@ -2,13 +2,15 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useCart } from "@/context/CartContext";
 
 export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login status instead of name
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
+  const { cartCount } = useCart();
 
   const isActive = (path: string) => pathname === path;
 
@@ -35,7 +37,7 @@ export default function Navbar() {
 
   const handleSignOut = () => {
     localStorage.removeItem("fyp-user-name");
-    setIsLoggedIn(false); 
+    setIsLoggedIn(false);
     setIsDropdownOpen(false);
     router.push("/signup");
   };
@@ -76,7 +78,11 @@ export default function Navbar() {
       <div className="flex items-center gap-5 relative" ref={dropdownRef}>
         <Link href="/cart" className="relative p-2 text-[#101b2d] hover:bg-gray-100 rounded-full transition-all group active:scale-90">
           <span className="text-2xl transition-transform group-hover:rotate-12 inline-block">🛒</span>
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-[#e8a88a] rounded-full border-2 border-white animate-pulse" />
+          {cartCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-6 h-6 bg-[#e85d04] text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse">
+              {cartCount}
+            </span>
+          )}
         </Link>
 
         <div className="h-8 w-[1px] bg-gray-200 mx-2 hidden sm:block" />
@@ -95,7 +101,6 @@ export default function Navbar() {
               ${!isLoggedIn ? "bg-gray-100 text-gray-500" : "bg-[#e8a88a] text-[#101b2d]"}`}>
               👤
             </div>
-            {/* CHANGED TO STATIC HI DRIVER */}
             <span className="text-sm uppercase tracking-tighter">Hi, Driver</span>
             <span className={`text-[10px] opacity-50 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
           </button>
@@ -106,7 +111,6 @@ export default function Navbar() {
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">
                     {!isLoggedIn ? "Guest Access" : "Authenticated"}
                 </p>
-                {/* CHANGED TO STATIC HI DRIVER */}
                 <p className="text-base font-black text-[#101b2d]">Hi, Driver</p>
               </div>
 

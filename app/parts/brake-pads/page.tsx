@@ -1,12 +1,31 @@
+"use client";
 import Link from "next/link";
+import { useState } from "react";
+import { useCart } from "@/context/CartContext";
+
+const productLinks = [
+  { name: "Brake Pads", slug: "brake-pads", image: "/images/brake-pads.jpg" },
+  { name: "Spark Plug", slug: "spark-plug", image: "/images/spark-plug.jpg" },
+  { name: "Motor Oil", slug: "motor-oil", image: "/images/motor-oil.jpg" },
+  { name: "Oil Filter", slug: "oil-filter", image: "/images/oil-filter.jpg" },
+  { name: "Air Filter", slug: "air-filter", image: "/images/cabin-filter.jpg" },
+  { name: "Floor Mat", slug: "floor-mat", image: "/images/floor-mat.jpg" },
+];
 
 export default function BrakePadsPage() {
-  const thumbnails = [
-    "/images/brake-pads.jpg",
-    "/images/spark-plug.jpg",
-    "/images/motor-oil.jpg",
-    "/images/cabin-filter.jpg",
-  ];
+  const { addToCart } = useCart();
+  const [qty, setQty] = useState(1);
+  const [added, setAdded] = useState(false);
+
+  const product = {
+    id: "brake-pads",
+    name: "FYP Ceramic Brake Pads",
+    sku: "FYP-BK-4092-CP",
+    price: 189.50,
+    image: "/images/brake-pads.jpg",
+    rating: 4.6,
+    reviews: 124,
+  };
 
   const specs = [
     ["Material", "High-Density Carbon Ceramic"],
@@ -16,10 +35,21 @@ export default function BrakePadsPage() {
     ["Warranty", "24 Months / 24,000 Miles"],
   ];
 
+  const handleAddToCart = () => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      sku: product.sku,
+      price: product.price,
+      qty,
+      image: product.image,
+    });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
+
   return (
     <main className="min-h-screen bg-[#f5f6f8] text-[#101827]">
-      
-
       <section className="max-w-[1400px] mx-auto p-8">
         <p className="text-sm text-gray-600 mb-6">
           Home / Brake System / Brake Pads / FYP Ceramic Brake Pads
@@ -28,26 +58,30 @@ export default function BrakePadsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 flex gap-5">
             <div className="flex flex-col gap-4">
-              {thumbnails.map((img, index) => (
-                <div
-                  key={img}
-                  className={`w-24 h-24 bg-white rounded-xl border-2 p-2 flex items-center justify-center ${
-                    index === 0 ? "border-[#e8a88a]" : "border-gray-200"
+              {productLinks.map((link) => (
+                <Link
+                  key={link.slug}
+                  href={`/parts/${link.slug}`}
+                  className={`w-24 h-24 bg-white rounded-xl border-2 p-2 flex items-center justify-center transition hover:scale-110 ${
+                    link.slug === "brake-pads"
+                      ? "border-[#e8a88a]"
+                      : "border-gray-200"
                   }`}
+                  title={link.name}
                 >
                   <img
-                    src={img}
-                    alt="Product thumbnail"
+                    src={link.image}
+                    alt={link.name}
                     className="w-full h-full object-cover rounded-lg"
                   />
-                </div>
+                </Link>
               ))}
             </div>
 
             <div className="flex-1 bg-white rounded-2xl shadow p-10 flex items-center justify-center">
               <img
-                src="/images/brake-pads.jpg"
-                alt="FYP Ceramic Brake Pads"
+                src={product.image}
+                alt={product.name}
                 className="max-h-[520px] object-contain rounded-xl"
               />
             </div>
@@ -67,23 +101,21 @@ export default function BrakePadsPage() {
             </div>
 
             <h2 className="text-4xl font-extrabold text-[#101b2d]">
-              FYP Ceramic Brake Pads
+              {product.name}
             </h2>
 
             <p className="text-gray-600 mt-2 font-semibold">
-              Part # FYP-BK-4092-CP
+              Part # {product.sku}
             </p>
 
             <p className="text-[#e8a88a] font-extrabold text-lg mt-4">
-              ★★★★★ <span className="text-black">4.6</span>{" "}
-              <span className="text-blue-600">(124 Reviews)</span>
+              ★★★★★ <span className="text-black">{product.rating}</span>{" "}
+              <span className="text-blue-600">({product.reviews} Reviews)</span>
             </p>
 
             <div className="bg-green-50 border border-green-200 rounded-xl p-5 mt-6 flex justify-between items-center">
               <div>
-                <h3 className="font-extrabold text-black">
-                  Fits Your Vehicle
-                </h3>
+                <h3 className="font-extrabold text-black">Fits Your Vehicle</h3>
                 <p className="text-gray-700">2021 BMW M4 Competition (G82)</p>
               </div>
               <span className="bg-green-600 text-white rounded-full w-9 h-9 flex items-center justify-center">
@@ -92,29 +124,41 @@ export default function BrakePadsPage() {
             </div>
 
             <p className="text-[#e85d04] text-5xl font-extrabold mt-8">
-              $189.50
+              ${product.price.toFixed(2)}
             </p>
             <p className="text-gray-600 mt-1">Excl. Tax & Shipping</p>
-            <p className="text-[#e8a88a] font-bold">
-              Bulk discount available
-            </p>
+            <p className="text-[#e8a88a] font-bold">Bulk discount available</p>
 
             <div className="flex gap-4 mt-8">
-              <div className="bg-gray-100 rounded-xl flex items-center">
-                <button className="px-5 py-4 font-bold">−</button>
-                <span className="px-5 font-bold">1</span>
-                <button className="px-5 py-4 font-bold">+</button>
+              <div className="bg-gray-100 rounded-xl flex items-center border border-gray-300">
+                <button
+                  onClick={() => setQty(Math.max(1, qty - 1))}
+                  className="px-5 py-4 font-bold hover:bg-gray-200 transition"
+                >
+                  −
+                </button>
+                <span className="px-5 font-bold text-lg">{qty}</span>
+                <button
+                  onClick={() => setQty(qty + 1)}
+                  className="px-5 py-4 font-bold hover:bg-gray-200 transition"
+                >
+                  +
+                </button>
               </div>
 
-              <Link
-                href="/cart"
-                className="flex-1 bg-[#e85d04] text-white rounded-xl font-extrabold text-lg shadow flex items-center justify-center"
+              <button
+                onClick={handleAddToCart}
+                className={`flex-1 text-white rounded-xl font-extrabold text-lg shadow flex items-center justify-center transition-all ${
+                  added
+                    ? "bg-green-600"
+                    : "bg-[#e85d04] hover:bg-[#d65502]"
+                }`}
               >
-                🛒 Add to Cart
-              </Link>
+                {added ? "✓ Added to Cart!" : "🛒 Add to Cart"}
+              </button>
             </div>
 
-            <button className="w-full mt-4 border-2 border-[#101b2d] text-[#101b2d] py-3 rounded-xl font-extrabold">
+            <button className="w-full mt-4 border-2 border-[#101b2d] text-[#101b2d] py-3 rounded-xl font-extrabold hover:bg-[#101b2d] hover:text-white transition">
               ♡ Save to Garage
             </button>
 
@@ -144,7 +188,6 @@ export default function BrakePadsPage() {
                 Low dust • Quiet • Long lasting
               </p>
             </div>
-
             <div className="bg-white rounded-xl shadow p-5 text-center">
               <p className="text-2xl">⚙️</p>
               <h3 className="font-extrabold">OE-Grade Quality</h3>
@@ -152,7 +195,6 @@ export default function BrakePadsPage() {
                 Meets or exceeds OEM standards
               </p>
             </div>
-
             <div className="bg-white rounded-xl shadow p-5 text-center">
               <p className="text-2xl">🏆</p>
               <h3 className="font-extrabold">Performance Tested</h3>
@@ -168,7 +210,6 @@ export default function BrakePadsPage() {
             <div className="bg-[#101b2d] text-white p-5">
               <h3 className="text-xl font-extrabold">Part Specifications</h3>
             </div>
-
             <table className="w-full text-left">
               <tbody>
                 {specs.map(([label, value], index) => (
@@ -189,7 +230,7 @@ export default function BrakePadsPage() {
               miles.
             </p>
             <img
-              src="/images/brake-pads.jpg"
+              src={product.image}
               alt="Brake pad"
               className="absolute right-[-20px] bottom-[-20px] w-44 opacity-30"
             />
@@ -204,7 +245,6 @@ export default function BrakePadsPage() {
                 Copper-free formula compliant with 2025 standards.
               </p>
             </div>
-
             <div className="bg-blue-50 rounded-2xl shadow p-6">
               <h3 className="text-xl font-extrabold text-blue-700">
                 Quick Bed-In
@@ -222,33 +262,33 @@ export default function BrakePadsPage() {
               Customer Reviews{" "}
               <span className="text-[#e8a88a] text-xl">★ 4.6</span>
             </h3>
-
-            <button className="bg-[#101b2d] text-white px-6 py-3 rounded-xl font-bold">
+            <button className="bg-[#101b2d] text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition">
               Write a Review
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              [
-                "Marcus T.",
-                "Excellent bite right out of the box. Zero dust after two weeks.",
-              ],
-              [
-                "Sarah J.",
-                "Quiet, clean, and easy to install. Delivery was very fast.",
-              ],
-              [
-                "David R.",
-                "Outstanding performance even under high temperature driving.",
-              ],
-            ].map(([name, text]) => (
-              <div key={name} className="bg-white p-6 rounded-2xl shadow">
-                <p className="font-extrabold">{name}</p>
-                <p className="text-[#e8a88a] font-bold mt-1">★★★★★</p>
-                <p className="text-gray-700 mt-4">{text}</p>
-              </div>
-            ))}
+            <div className="bg-white p-6 rounded-2xl shadow">
+              <p className="font-extrabold">Marcus T.</p>
+              <p className="text-[#e8a88a] font-bold mt-1">★★★★★</p>
+              <p className="text-gray-700 mt-4">
+                Excellent bite right out of the box. Zero dust after two weeks.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow">
+              <p className="font-extrabold">Sarah J.</p>
+              <p className="text-[#e8a88a] font-bold mt-1">★★★★★</p>
+              <p className="text-gray-700 mt-4">
+                Quiet, clean, and easy to install. Delivery was very fast.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow">
+              <p className="font-extrabold">David R.</p>
+              <p className="text-[#e8a88a] font-bold mt-1">★★★★★</p>
+              <p className="text-gray-700 mt-4">
+                Outstanding performance even under high temperature driving.
+              </p>
+            </div>
           </div>
         </section>
       </section>

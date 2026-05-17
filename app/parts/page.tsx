@@ -6,7 +6,7 @@ const products = [
   {
     name: "Carbon-Ceramic Brake Pads",
     price: "$89.99",
-    image: "/images/brake-pad.jpg",
+    image: "/images/brake-pads.jpg", 
     link: "/parts/brake-pads",
     tag: "Best Seller",
   },
