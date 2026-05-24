@@ -1,20 +1,9 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { createOrder } from "@/lib/checkoutService";
-
-const IconBox = ({ children }: { children: React.ReactNode }) => (
-  <div className="w-11 h-11 rounded-xl bg-[#e8a88a]/15 text-[#e8a88a] flex items-center justify-center">
-    {children}
-  </div>
-);
-
-const TruckIcon = () => <span className="text-2xl">🚚</span>;
-const AddressIcon = () => <span className="text-2xl">📍</span>;
-const PaymentIcon = () => <span className="text-2xl">💳</span>;
-const CashIcon = () => <span className="text-2xl">💵</span>;
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -36,22 +25,28 @@ export default function CheckoutPage() {
 
   // Get current user and cart on mount
   useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
+    const init = async () => {
+      try {
+        // Get cart from localStorage
+        const savedCart = localStorage.getItem("fyp-cart");
+        if (savedCart) {
+          const parsedItems = JSON.parse(savedCart);
+          setItems(parsedItems);
+        }
+
+        // Get user from Supabase
+        const { data } = await supabase.auth.getUser();
+        setUser(data.user);
+      } catch (err) {
+        console.error("Init error:", err);
+      }
     };
 
-    const savedCart = localStorage.getItem("fyp-cart");
-    if (savedCart) {
-      const parsedItems = JSON.parse(savedCart);
-      setItems(parsedItems);
-    }
-
-    getCurrentUser();
+    init();
   }, []);
 
   const subtotal = items.reduce((acc, item) => acc + Number(item.price) * item.qty, 0);
-  const tax = subtotal * 0.1; // 10% tax
+  const tax = subtotal * 0.1;
   const total = subtotal + tax + shipping;
 
   const handleDeliveryChange = (method: string) => {
@@ -65,7 +60,6 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      // Validation
       if (!user) {
         setError("You must be logged in to place an order");
         setLoading(false);
@@ -84,24 +78,33 @@ export default function CheckoutPage() {
         return;
       }
 
-      console.log("📋 Placing order with:");
-      console.log("User ID:", user.id);
-      console.log("Items:", items);
-      console.log("Payment Method:", paymentMethod);
-      console.log("Totals:", { subtotal, shipping, tax, total });
+      console.log("📋 Creating order...");
 
-      // Transform items to match checkoutService format
+      // Create order directly in Supabase
       const cartItems = items.map((item) => ({
         name: item.name,
         quantity: item.qty,
         price: Number(item.price),
       }));
 
-      // Create order in Supabase
-      const result = await createOrder(
-        user.id,
-        cartItems,
-        {
+      // Get product IDs
+      const productNames = cartItems.map((item) => item.name);
+      const { data: products, error: productError } = await supabase
+        .from("products")
+        .select("id, name, price")
+        .in("name", productNames);
+
+      if (productError) {
+        throw new Error(`Product lookup failed: ${productError.message}`);
+      }
+
+      // Create order
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          user_id: user.id,
+          total: total,
+          status: "pending",
           shipping_name: fullName,
           shipping_address: address,
           shipping_city: city,
@@ -110,24 +113,54 @@ export default function CheckoutPage() {
           shipping_phone: phone,
           delivery_method: deliveryMethod,
           payment_method: paymentMethod,
-        }
-      );
+          shipping_cost: shipping,
+          tax: tax,
+        })
+        .select();
 
-      if (!result || !result.orderId) {
-        setError("Failed to create order");
-        setLoading(false);
-        return;
+      if (orderError) {
+        throw new Error(`Order creation failed: ${orderError.message}`);
       }
 
-      console.log("✅ Order created successfully:", result.orderId);
+      if (!orderData || orderData.length === 0) {
+        throw new Error("Order was not created");
+      }
 
-      // Clear cart from localStorage
+      const orderId = orderData[0].id;
+
+      // Create order items
+      const orderItems = cartItems.map((item) => {
+        const product = products?.find(
+          (p) => p.name.toLowerCase() === item.name.toLowerCase()
+        );
+        if (!product) {
+          throw new Error(`Product not found: ${item.name}`);
+        }
+        return {
+          order_id: orderId,
+          product_id: product.id,
+          quantity: item.quantity,
+          price: item.price,
+        };
+      });
+
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItems);
+
+      if (itemsError) {
+        throw new Error(`Items creation failed: ${itemsError.message}`);
+      }
+
+      console.log("✅ Order created:", orderId);
+
+      // Clear cart
       localStorage.removeItem("fyp-cart");
 
-      // Redirect to success page with order ID
-      router.push(`/success/${result.orderId}`);
+      // Redirect to success
+      router.push(`/success/${orderId}`);
     } catch (err) {
-      console.error("❌ Checkout error:", err);
+      console.error("Order error:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
       setLoading(false);
     }
@@ -142,17 +175,17 @@ export default function CheckoutPage() {
         </div>
 
         {error && (
-          <div className="bg-red-100 border-2 border-red-400 text-red-700 px-6 py-4 rounded-2xl mb-8 animate-in fade-in">
+          <div className="bg-red-100 border-2 border-red-400 text-red-700 px-6 py-4 rounded-2xl mb-8">
             <p className="font-bold">❌ Error</p>
             <p>{error}</p>
           </div>
         )}
 
         {!user && (
-          <div className="bg-yellow-100 border-2 border-yellow-400 text-yellow-700 px-6 py-4 rounded-2xl mb-8 animate-in fade-in">
+          <div className="bg-yellow-100 border-2 border-yellow-400 text-yellow-700 px-6 py-4 rounded-2xl mb-8">
             <p className="font-bold">⚠️ Please Log In</p>
             <p>You must be logged in to checkout.</p>
-            <Link href="/login" className="underline font-bold mt-2 block hover:opacity-80 transition">
+            <Link href="/login" className="underline font-bold mt-2 block">
               Go to Login
             </Link>
           </div>
@@ -161,16 +194,13 @@ export default function CheckoutPage() {
         <form onSubmit={handlePlaceOrder}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8 space-y-8">
-              {/* Shipping Address Section */}
-              <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100 hover:shadow-md transition">
-                <div className="flex items-center gap-4 mb-6">
-                  <IconBox><AddressIcon /></IconBox>
-                  <h3 className="text-2xl font-extrabold">Shipping Address</h3>
-                </div>
+              {/* Shipping Address */}
+              <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
+                <h3 className="text-2xl font-extrabold mb-6">📍 Shipping Address</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <input
                     type="text"
-                    className="md:col-span-2 border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
+                    className="md:col-span-2 border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a]"
                     placeholder="Full Name *"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
@@ -178,7 +208,7 @@ export default function CheckoutPage() {
                   />
                   <input
                     type="text"
-                    className="md:col-span-2 border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
+                    className="md:col-span-2 border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a]"
                     placeholder="Street Address *"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
@@ -186,7 +216,7 @@ export default function CheckoutPage() {
                   />
                   <input
                     type="text"
-                    className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
+                    className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a]"
                     placeholder="City *"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
@@ -194,7 +224,7 @@ export default function CheckoutPage() {
                   />
                   <input
                     type="text"
-                    className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
+                    className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a]"
                     placeholder="State *"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
@@ -202,7 +232,7 @@ export default function CheckoutPage() {
                   />
                   <input
                     type="text"
-                    className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
+                    className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a]"
                     placeholder="ZIP Code *"
                     value={zipCode}
                     onChange={(e) => setZipCode(e.target.value)}
@@ -210,8 +240,8 @@ export default function CheckoutPage() {
                   />
                   <input
                     type="tel"
-                    className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
-                    placeholder="Phone Number *"
+                    className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a]"
+                    placeholder="Phone *"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     required
@@ -219,165 +249,112 @@ export default function CheckoutPage() {
                 </div>
               </section>
 
-              {/* Delivery Method Section */}
-              <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100 hover:shadow-md transition">
-                <div className="flex items-center gap-4 mb-6">
-                  <IconBox><TruckIcon /></IconBox>
-                  <h3 className="text-2xl font-extrabold">Delivery Method</h3>
-                </div>
+              {/* Delivery Method */}
+              <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
+                <h3 className="text-2xl font-extrabold mb-6">🚚 Delivery Method</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
                     type="button"
                     onClick={() => handleDeliveryChange("standard")}
-                    className={`p-6 rounded-2xl flex justify-between items-center border-2 transition transform hover:scale-105 ${
+                    className={`p-6 rounded-2xl border-2 transition ${
                       deliveryMethod === "standard"
-                        ? "border-[#101b2d] bg-[#101b2d]/5 shadow-md"
-                        : "border-gray-200 hover:border-[#e8a88a]"
+                        ? "border-[#101b2d] bg-[#101b2d]/5"
+                        : "border-gray-200"
                     }`}
                   >
-                    <div className="text-left">
-                      <p className="font-bold text-lg">Standard</p>
-                      <p className="text-sm text-gray-600">5-7 business days</p>
-                    </div>
-                    <b className="text-[#e8a88a]">$12.50</b>
+                    <p className="font-bold">Standard</p>
+                    <p className="text-sm text-gray-600">5-7 days</p>
+                    <p className="font-bold text-[#e8a88a] mt-2">$12.50</p>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDeliveryChange("express")}
-                    className={`p-6 rounded-2xl flex justify-between items-center border-2 transition transform hover:scale-105 ${
+                    className={`p-6 rounded-2xl border-2 transition ${
                       deliveryMethod === "express"
-                        ? "border-[#101b2d] bg-[#101b2d]/5 shadow-md"
-                        : "border-gray-200 hover:border-[#e8a88a]"
+                        ? "border-[#101b2d] bg-[#101b2d]/5"
+                        : "border-gray-200"
                     }`}
                   >
-                    <div className="text-left">
-                      <p className="font-bold text-lg">Express</p>
-                      <p className="text-sm text-gray-600">2-3 business days</p>
-                    </div>
-                    <b className="text-[#e8a88a]">$28.00</b>
+                    <p className="font-bold">Express</p>
+                    <p className="text-sm text-gray-600">2-3 days</p>
+                    <p className="font-bold text-[#e8a88a] mt-2">$28.00</p>
                   </button>
                 </div>
               </section>
 
-              {/* Payment Method Section */}
-              <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100 hover:shadow-md transition">
-                <div className="flex items-center gap-4 mb-6">
-                  <IconBox><PaymentIcon /></IconBox>
-                  <h3 className="text-2xl font-extrabold">Payment Method</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  {/* Cash on Delivery */}
+              {/* Payment Method */}
+              <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
+                <h3 className="text-2xl font-extrabold mb-6">💳 Payment Method</h3>
+                <div className="space-y-4">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("cash_on_delivery")}
-                    className={`p-5 rounded-2xl flex items-center gap-3 border-2 font-bold transition transform hover:scale-105 ${
+                    className={`w-full p-4 rounded-2xl border-2 transition text-left ${
                       paymentMethod === "cash_on_delivery"
-                        ? "border-[#101b2d] bg-[#101b2d]/5 shadow-md"
-                        : "border-gray-200 hover:border-[#e8a88a]"
+                        ? "border-[#101b2d] bg-[#101b2d]/5"
+                        : "border-gray-200"
                     }`}
                   >
-                    <CashIcon />
-                    <div className="text-left">
-                      <p>Cash on Delivery</p>
-                      <p className="text-xs text-gray-600 font-normal">Pay on arrival</p>
-                    </div>
+                    <p className="font-bold">💵 Cash on Delivery</p>
+                    <p className="text-sm text-gray-600">Pay when it arrives</p>
                   </button>
-
-                  {/* Credit Card */}
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("card")}
-                    className={`p-5 rounded-2xl flex items-center gap-3 border-2 font-bold transition transform hover:scale-105 ${
+                    className={`w-full p-4 rounded-2xl border-2 transition text-left ${
                       paymentMethod === "card"
-                        ? "border-[#101b2d] bg-[#101b2d]/5 shadow-md"
-                        : "border-gray-200 hover:border-[#e8a88a]"
+                        ? "border-[#101b2d] bg-[#101b2d]/5"
+                        : "border-gray-200"
                     }`}
                   >
-                    <span className="text-2xl">💳</span>
-                    <div className="text-left">
-                      <p>Credit Card</p>
-                      <p className="text-xs text-gray-600 font-normal">Secure payment</p>
-                    </div>
+                    <p className="font-bold">💳 Credit Card</p>
+                    <p className="text-sm text-gray-600">Secure payment</p>
                   </button>
                 </div>
 
-                {/* Payment Details */}
                 {paymentMethod === "cash_on_delivery" && (
-                  <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 animate-in fade-in">
-                    <p className="text-blue-900 font-semibold">
-                      💵 Pay in cash when your order arrives. Your order will be marked as "Pending Payment" until payment is received.
+                  <div className="mt-4 bg-blue-50 border-2 border-blue-200 rounded-2xl p-4">
+                    <p className="text-blue-900 font-semibold text-sm">
+                      💵 Pay in cash when your order arrives
                     </p>
-                  </div>
-                )}
-
-                {paymentMethod === "card" && (
-                  <div className="space-y-4 animate-in fade-in duration-300">
-                    <input
-                      type="text"
-                      className="w-full border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
-                      placeholder="Card Number"
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <input
-                        type="text"
-                        className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
-                        placeholder="MM/YY"
-                      />
-                      <input
-                        type="text"
-                        className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
-                        placeholder="CVC"
-                      />
-                    </div>
                   </div>
                 )}
               </section>
             </div>
 
-            {/* Order Summary Sidebar */}
+            {/* Order Summary */}
             <aside className="lg:col-span-4">
-              <div className="bg-[#101b2d] text-white rounded-3xl shadow-xl p-8 sticky top-24 transition-all hover:shadow-2xl">
+              <div className="bg-[#101b2d] text-white rounded-3xl shadow-xl p-8 sticky top-24">
                 <h3 className="text-2xl font-extrabold border-b border-white/20 pb-5 mb-5">Order Summary</h3>
 
-                {/* Items List */}
-                <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto">
                   {items.length > 0 ? (
                     items.map((item, idx) => (
-                      <div key={idx} className="flex gap-4 items-center bg-white/5 p-3 rounded-xl hover:bg-white/10 transition">
-                        <img
-                          src={item.image}
-                          className="w-14 h-14 rounded-lg object-cover bg-white/10"
-                          alt={item.name}
-                        />
-                        <div className="flex-1">
-                          <p className="font-bold text-sm truncate">{item.name}</p>
-                          <p className="text-white/60 text-xs">
-                            {item.qty} × ${Number(item.price).toFixed(2)}
-                          </p>
-                          <p className="text-[#e8a88a] font-bold text-xs mt-1">
-                            ${(item.qty * Number(item.price)).toFixed(2)}
-                          </p>
+                      <div key={idx} className="flex justify-between text-sm pb-4 border-b border-white/10">
+                        <div>
+                          <p className="font-bold">{item.name}</p>
+                          <p className="text-white/60">Qty: {item.qty}</p>
                         </div>
+                        <p className="font-bold">${(item.qty * Number(item.price)).toFixed(2)}</p>
                       </div>
                     ))
                   ) : (
-                    <p className="text-white/40 italic text-center py-8">No items in cart</p>
+                    <p className="text-white/40">No items</p>
                   )}
                 </div>
 
-                {/* Pricing Breakdown */}
                 <div className="border-t border-white/20 pt-5 space-y-3 mb-6">
-                  <div className="flex justify-between text-white/70">
-                    <span className="text-sm">Subtotal</span>
-                    <span className="text-white font-bold">${subtotal.toFixed(2)}</span>
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span className="font-bold">${subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-white/70">
-                    <span className="text-sm">Shipping</span>
-                    <span className="text-white font-bold">${shipping.toFixed(2)}</span>
+                  <div className="flex justify-between">
+                    <span>Shipping</span>
+                    <span className="font-bold">${shipping.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-white/70">
-                    <span className="text-sm">Tax (10%)</span>
-                    <span className="text-white font-bold">${tax.toFixed(2)}</span>
+                  <div className="flex justify-between">
+                    <span>Tax (10%)</span>
+                    <span className="font-bold">${tax.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-2xl font-extrabold text-[#e8a88a] pt-4 border-t border-white/20">
                     <span>Total</span>
@@ -385,54 +362,18 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                {/* Payment Method Badge */}
-                <div className="mb-4 bg-white/10 rounded-xl p-3 text-center">
-                  <p className="text-white/60 text-xs mb-1">Payment Method</p>
-                  <p className="text-[#e8a88a] font-bold">
-                    {paymentMethod === "cash_on_delivery" ? "💵 Cash on Delivery" : "💳 Credit Card"}
-                  </p>
-                </div>
-
                 <button
                   type="submit"
                   disabled={loading || !user || items.length === 0}
-                  className="w-full bg-[#e8a88a] text-[#101b2d] py-4 rounded-xl font-extrabold hover:bg-[#f5b99a] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 transform active:scale-95"
+                  className="w-full bg-[#e8a88a] text-[#101b2d] py-4 rounded-xl font-extrabold hover:bg-[#f5b99a] disabled:opacity-50"
                 >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="w-5 h-5 border-2 border-[#101b2d]/20 border-t-[#101b2d] rounded-full animate-spin" />
-                      Processing...
-                    </span>
-                  ) : (
-                    "Place Order →"
-                  )}
+                  {loading ? "Processing..." : "Place Order →"}
                 </button>
-
-                <p className="text-white/40 text-xs text-center mt-4">
-                  🔒 Your payment is secure and encrypted
-                </p>
               </div>
             </aside>
           </div>
         </form>
       </section>
-
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(232, 168, 138, 0.4);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(232, 168, 138, 0.6);
-        }
-      `}</style>
     </main>
   );
 }
