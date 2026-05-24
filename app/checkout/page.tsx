@@ -14,12 +14,14 @@ const IconBox = ({ children }: { children: React.ReactNode }) => (
 const TruckIcon = () => <span className="text-2xl">🚚</span>;
 const AddressIcon = () => <span className="text-2xl">📍</span>;
 const PaymentIcon = () => <span className="text-2xl">💳</span>;
+const CashIcon = () => <span className="text-2xl">💵</span>;
 
 export default function CheckoutPage() {
   const router = useRouter();
   const [items, setItems] = useState<any[]>([]);
   const [shipping, setShipping] = useState(12.5);
-  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [deliveryMethod, setDeliveryMethod] = useState("standard");
+  const [paymentMethod, setPaymentMethod] = useState("cash_on_delivery");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState<any>(null);
@@ -30,6 +32,7 @@ export default function CheckoutPage() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
+  const [phone, setPhone] = useState("");
 
   // Get current user and cart on mount
   useEffect(() => {
@@ -48,8 +51,13 @@ export default function CheckoutPage() {
   }, []);
 
   const subtotal = items.reduce((acc, item) => acc + Number(item.price) * item.qty, 0);
-  const tax = subtotal * 0.08;
+  const tax = subtotal * 0.1; // 10% tax
   const total = subtotal + tax + shipping;
+
+  const handleDeliveryChange = (method: string) => {
+    setDeliveryMethod(method);
+    setShipping(method === "express" ? 28.0 : 12.5);
+  };
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,8 +78,8 @@ export default function CheckoutPage() {
         return;
       }
 
-      if (!fullName || !address || !city || !state || !zipCode) {
-        setError("Please fill in all address fields");
+      if (!fullName || !address || !city || !state || !zipCode || !phone) {
+        setError("Please fill in all required fields");
         setLoading(false);
         return;
       }
@@ -79,26 +87,34 @@ export default function CheckoutPage() {
       console.log("📋 Placing order with:");
       console.log("User ID:", user.id);
       console.log("Items:", items);
+      console.log("Payment Method:", paymentMethod);
       console.log("Totals:", { subtotal, shipping, tax, total });
+
+      // Transform items to match checkoutService format
+      const cartItems = items.map((item) => ({
+        name: item.name,
+        quantity: item.qty,
+        price: Number(item.price),
+      }));
 
       // Create order in Supabase
       const result = await createOrder(
         user.id,
+        cartItems,
         {
-          fullName,
-          address,
-          city,
-          state,
-          zipCode,
-          deliveryMethod: shipping === 12.5 ? "standard" : "express",
-          paymentMethod: paymentMethod as "card" | "paypal",
-        },
-        items,
-        { subtotal, shipping, tax, total }
+          shipping_name: fullName,
+          shipping_address: address,
+          shipping_city: city,
+          shipping_state: state,
+          shipping_zip: zipCode,
+          shipping_phone: phone,
+          delivery_method: deliveryMethod,
+          payment_method: paymentMethod,
+        }
       );
 
-      if (!result.success) {
-        setError(result.error || "Failed to create order");
+      if (!result || !result.orderId) {
+        setError("Failed to create order");
         setLoading(false);
         return;
       }
@@ -126,17 +142,17 @@ export default function CheckoutPage() {
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-2xl mb-8">
+          <div className="bg-red-100 border-2 border-red-400 text-red-700 px-6 py-4 rounded-2xl mb-8 animate-in fade-in">
             <p className="font-bold">❌ Error</p>
             <p>{error}</p>
           </div>
         )}
 
         {!user && (
-          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-6 py-4 rounded-2xl mb-8">
+          <div className="bg-yellow-100 border-2 border-yellow-400 text-yellow-700 px-6 py-4 rounded-2xl mb-8 animate-in fade-in">
             <p className="font-bold">⚠️ Please Log In</p>
             <p>You must be logged in to checkout.</p>
-            <Link href="/login" className="underline font-bold mt-2 block">
+            <Link href="/login" className="underline font-bold mt-2 block hover:opacity-80 transition">
               Go to Login
             </Link>
           </div>
@@ -146,7 +162,7 @@ export default function CheckoutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8 space-y-8">
               {/* Shipping Address Section */}
-              <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
+              <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100 hover:shadow-md transition">
                 <div className="flex items-center gap-4 mb-6">
                   <IconBox><AddressIcon /></IconBox>
                   <h3 className="text-2xl font-extrabold">Shipping Address</h3>
@@ -154,49 +170,57 @@ export default function CheckoutPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <input
                     type="text"
-                    className="md:col-span-2 border rounded-xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a]"
-                    placeholder="Full Name"
+                    className="md:col-span-2 border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
+                    placeholder="Full Name *"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
                   />
                   <input
                     type="text"
-                    className="md:col-span-2 border rounded-xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a]"
-                    placeholder="Street Address"
+                    className="md:col-span-2 border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
+                    placeholder="Street Address *"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     required
                   />
                   <input
                     type="text"
-                    className="border rounded-xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a]"
-                    placeholder="City"
+                    className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
+                    placeholder="City *"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     required
                   />
                   <input
                     type="text"
-                    className="border rounded-xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a]"
-                    placeholder="State"
+                    className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
+                    placeholder="State *"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                     required
                   />
                   <input
                     type="text"
-                    className="border rounded-xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a]"
-                    placeholder="ZIP Code"
+                    className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
+                    placeholder="ZIP Code *"
                     value={zipCode}
                     onChange={(e) => setZipCode(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="tel"
+                    className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
+                    placeholder="Phone Number *"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     required
                   />
                 </div>
               </section>
 
               {/* Delivery Method Section */}
-              <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
+              <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100 hover:shadow-md transition">
                 <div className="flex items-center gap-4 mb-6">
                   <IconBox><TruckIcon /></IconBox>
                   <h3 className="text-2xl font-extrabold">Delivery Method</h3>
@@ -204,66 +228,107 @@ export default function CheckoutPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
                     type="button"
-                    onClick={() => setShipping(12.5)}
-                    className={`p-5 rounded-2xl flex justify-between border-2 ${shipping === 12.5 ? "border-[#101b2d] bg-[#101b2d]/5" : "border-gray-100"}`}
+                    onClick={() => handleDeliveryChange("standard")}
+                    className={`p-6 rounded-2xl flex justify-between items-center border-2 transition transform hover:scale-105 ${
+                      deliveryMethod === "standard"
+                        ? "border-[#101b2d] bg-[#101b2d]/5 shadow-md"
+                        : "border-gray-200 hover:border-[#e8a88a]"
+                    }`}
                   >
-                    <div className="text-left"><p className="font-bold">Standard</p></div>
-                    <b>$12.50</b>
+                    <div className="text-left">
+                      <p className="font-bold text-lg">Standard</p>
+                      <p className="text-sm text-gray-600">5-7 business days</p>
+                    </div>
+                    <b className="text-[#e8a88a]">$12.50</b>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShipping(28.0)}
-                    className={`p-5 rounded-2xl flex justify-between border-2 ${shipping === 28.0 ? "border-[#101b2d] bg-[#101b2d]/5" : "border-gray-100"}`}
+                    onClick={() => handleDeliveryChange("express")}
+                    className={`p-6 rounded-2xl flex justify-between items-center border-2 transition transform hover:scale-105 ${
+                      deliveryMethod === "express"
+                        ? "border-[#101b2d] bg-[#101b2d]/5 shadow-md"
+                        : "border-gray-200 hover:border-[#e8a88a]"
+                    }`}
                   >
-                    <div className="text-left"><p className="font-bold">Express</p></div>
-                    <b>$28.00</b>
+                    <div className="text-left">
+                      <p className="font-bold text-lg">Express</p>
+                      <p className="text-sm text-gray-600">2-3 business days</p>
+                    </div>
+                    <b className="text-[#e8a88a]">$28.00</b>
                   </button>
                 </div>
               </section>
 
               {/* Payment Method Section */}
-              <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
+              <section className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100 hover:shadow-md transition">
                 <div className="flex items-center gap-4 mb-6">
                   <IconBox><PaymentIcon /></IconBox>
                   <h3 className="text-2xl font-extrabold">Payment Method</h3>
                 </div>
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  {/* Cash on Delivery */}
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("cash_on_delivery")}
+                    className={`p-5 rounded-2xl flex items-center gap-3 border-2 font-bold transition transform hover:scale-105 ${
+                      paymentMethod === "cash_on_delivery"
+                        ? "border-[#101b2d] bg-[#101b2d]/5 shadow-md"
+                        : "border-gray-200 hover:border-[#e8a88a]"
+                    }`}
+                  >
+                    <CashIcon />
+                    <div className="text-left">
+                      <p>Cash on Delivery</p>
+                      <p className="text-xs text-gray-600 font-normal">Pay on arrival</p>
+                    </div>
+                  </button>
+
+                  {/* Credit Card */}
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("card")}
-                    className={`rounded-xl py-3 font-bold border-2 transition ${paymentMethod === "card" ? "border-[#101b2d] bg-[#101b2d]/5" : "border-gray-100"}`}
+                    className={`p-5 rounded-2xl flex items-center gap-3 border-2 font-bold transition transform hover:scale-105 ${
+                      paymentMethod === "card"
+                        ? "border-[#101b2d] bg-[#101b2d]/5 shadow-md"
+                        : "border-gray-200 hover:border-[#e8a88a]"
+                    }`}
                   >
-                    💳 Credit Card
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("paypal")}
-                    className={`rounded-xl py-3 font-bold border-2 transition ${paymentMethod === "paypal" ? "border-[#101b2d] bg-[#101b2d]/5" : "border-gray-100"}`}
-                  >
-                    PayPal
+                    <span className="text-2xl">💳</span>
+                    <div className="text-left">
+                      <p>Credit Card</p>
+                      <p className="text-xs text-gray-600 font-normal">Secure payment</p>
+                    </div>
                   </button>
                 </div>
 
-                {paymentMethod === "card" ? (
+                {/* Payment Details */}
+                {paymentMethod === "cash_on_delivery" && (
+                  <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 animate-in fade-in">
+                    <p className="text-blue-900 font-semibold">
+                      💵 Pay in cash when your order arrives. Your order will be marked as "Pending Payment" until payment is received.
+                    </p>
+                  </div>
+                )}
+
+                {paymentMethod === "card" && (
                   <div className="space-y-4 animate-in fade-in duration-300">
                     <input
                       type="text"
-                      className="w-full border rounded-xl p-4 outline-none focus:ring-2 focus:ring-[#e8a88a]"
+                      className="w-full border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
                       placeholder="Card Number"
                     />
                     <div className="grid grid-cols-2 gap-4">
-                      <input type="text" className="border rounded-xl p-4 outline-none" placeholder="MM/YY" />
-                      <input type="text" className="border rounded-xl p-4 outline-none" placeholder="CVC" />
+                      <input
+                        type="text"
+                        className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
+                        placeholder="MM/YY"
+                      />
+                      <input
+                        type="text"
+                        className="border-2 border-gray-200 rounded-xl p-4 outline-none focus:border-[#e8a88a] focus:ring-2 focus:ring-[#e8a88a]/20 transition"
+                        placeholder="CVC"
+                      />
                     </div>
-                  </div>
-                ) : (
-                  <div className="animate-in slide-in-from-top-2 duration-300">
-                    <label className="text-sm font-bold text-gray-600 ml-1">PayPal Email</label>
-                    <input
-                      type="email"
-                      className="w-full border-2 border-[#101b2d] rounded-xl p-4 mt-2 outline-none"
-                      placeholder="example@paypal.com"
-                    />
                   </div>
                 )}
               </section>
@@ -271,55 +336,103 @@ export default function CheckoutPage() {
 
             {/* Order Summary Sidebar */}
             <aside className="lg:col-span-4">
-              <div className="bg-[#101b2d] text-white rounded-3xl shadow-xl p-8 sticky top-24">
+              <div className="bg-[#101b2d] text-white rounded-3xl shadow-xl p-8 sticky top-24 transition-all hover:shadow-2xl">
                 <h3 className="text-2xl font-extrabold border-b border-white/20 pb-5 mb-5">Order Summary</h3>
-                <div className="space-y-4 mb-6 max-h-[250px] overflow-y-auto pr-2">
+
+                {/* Items List */}
+                <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                   {items.length > 0 ? (
-                    items.map((item) => (
-                      <div key={item.id} className="flex gap-4 items-center">
-                        <img src={item.image} className="w-12 h-12 rounded-lg object-cover bg-white" alt={item.name} />
+                    items.map((item, idx) => (
+                      <div key={idx} className="flex gap-4 items-center bg-white/5 p-3 rounded-xl hover:bg-white/10 transition">
+                        <img
+                          src={item.image}
+                          className="w-14 h-14 rounded-lg object-cover bg-white/10"
+                          alt={item.name}
+                        />
                         <div className="flex-1">
-                          <p className="font-bold text-xs">{item.name}</p>
-                          <p className="text-white/60 text-xs">QTY: {item.qty} × ${Number(item.price).toFixed(2)}</p>
+                          <p className="font-bold text-sm truncate">{item.name}</p>
+                          <p className="text-white/60 text-xs">
+                            {item.qty} × ${Number(item.price).toFixed(2)}
+                          </p>
+                          <p className="text-[#e8a88a] font-bold text-xs mt-1">
+                            ${(item.qty * Number(item.price)).toFixed(2)}
+                          </p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-white/40 italic">No items in cart</p>
+                    <p className="text-white/40 italic text-center py-8">No items in cart</p>
                   )}
                 </div>
 
-                <div className="border-t border-white/20 pt-5 space-y-3">
+                {/* Pricing Breakdown */}
+                <div className="border-t border-white/20 pt-5 space-y-3 mb-6">
                   <div className="flex justify-between text-white/70">
-                    <span>Subtotal</span>
+                    <span className="text-sm">Subtotal</span>
                     <span className="text-white font-bold">${subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-white/70">
-                    <span>Shipping</span>
+                    <span className="text-sm">Shipping</span>
                     <span className="text-white font-bold">${shipping.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-white/70">
-                    <span>Tax (8%)</span>
+                    <span className="text-sm">Tax (10%)</span>
                     <span className="text-white font-bold">${tax.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-2xl font-extrabold text-[#e8a88a] pt-4">
+                  <div className="flex justify-between text-2xl font-extrabold text-[#e8a88a] pt-4 border-t border-white/20">
                     <span>Total</span>
                     <span>${total.toFixed(2)}</span>
                   </div>
                 </div>
 
+                {/* Payment Method Badge */}
+                <div className="mb-4 bg-white/10 rounded-xl p-3 text-center">
+                  <p className="text-white/60 text-xs mb-1">Payment Method</p>
+                  <p className="text-[#e8a88a] font-bold">
+                    {paymentMethod === "cash_on_delivery" ? "💵 Cash on Delivery" : "💳 Credit Card"}
+                  </p>
+                </div>
+
                 <button
                   type="submit"
                   disabled={loading || !user || items.length === 0}
-                  className="w-full bg-[#e8a88a] text-white mt-6 py-4 rounded-xl font-extrabold hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                  className="w-full bg-[#e8a88a] text-[#101b2d] py-4 rounded-xl font-extrabold hover:bg-[#f5b99a] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 transform active:scale-95"
                 >
-                  {loading ? "Processing..." : "Place Order →"}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="w-5 h-5 border-2 border-[#101b2d]/20 border-t-[#101b2d] rounded-full animate-spin" />
+                      Processing...
+                    </span>
+                  ) : (
+                    "Place Order →"
+                  )}
                 </button>
+
+                <p className="text-white/40 text-xs text-center mt-4">
+                  🔒 Your payment is secure and encrypted
+                </p>
               </div>
             </aside>
           </div>
         </form>
       </section>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(232, 168, 138, 0.4);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(232, 168, 138, 0.6);
+        }
+      `}</style>
     </main>
   );
 }
