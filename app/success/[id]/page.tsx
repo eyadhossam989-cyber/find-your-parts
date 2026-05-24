@@ -97,7 +97,7 @@ export default function SuccessPage({ params }: { params: { id: string } }) {
           throw new Error("Order not found");
         }
 
-        setOrder(data as Order);
+        setOrder(data as any);
       } catch (err) {
         console.error("Error:", err);
         setError(err instanceof Error ? err.message : "Failed to load order");
@@ -253,7 +253,7 @@ export default function SuccessPage({ params }: { params: { id: string } }) {
             </h2>
             <div className="space-y-4">
               {order.order_items && order.order_items.length > 0 ? (
-                order.order_items.map((item) => (
+                order.order_items.map((item: any) => (
                   <div
                     key={item.id}
                     className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl"
