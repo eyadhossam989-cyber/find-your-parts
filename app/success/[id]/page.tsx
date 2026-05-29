@@ -1,7 +1,5 @@
-"use client";
-import { useEffect, useState } from "react";
-import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
+import Link from "next/link";
 
 interface OrderItem {
   id: string;
@@ -32,108 +30,125 @@ interface Order {
   order_items?: OrderItem[];
 }
 
-export default function SuccessPage({ params }: { params: { id: string } }) {
-  const orderId = params?.id;
-  const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
+export default async function SuccessPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id: orderId } = await params;
 
-  useEffect(() => {
-    const loadOrder = async () => {
-      try {
-        if (!orderId) {
-          setError("No order ID provided");
-          setLoading(false);
-          return;
-        }
-
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-        if (!supabaseUrl || !supabaseKey) {
-          throw new Error("Supabase config missing");
-        }
-
-        const supabase = createClient(supabaseUrl, supabaseKey);
-
-        const { data, error: err } = await supabase
-          .from("orders")
-          .select(
-            `
-            id,
-            user_id,
-            total,
-            status,
-            shipping_name,
-            shipping_address,
-            shipping_city,
-            shipping_state,
-            shipping_zip,
-            shipping_phone,
-            delivery_method,
-            shipping_cost,
-            tax,
-            created_at,
-            order_items (
-              id,
-              product_id,
-              quantity,
-              price,
-              products (
-                name,
-                image_url
-              )
-            )
-          `
-          )
-          .eq("id", orderId)
-          .single();
-
-        if (err) {
-          throw new Error(err.message);
-        }
-
-        if (!data) {
-          throw new Error("Order not found");
-        }
-
-        setOrder(data as any);
-      } catch (err) {
-        console.error("Error:", err);
-        setError(err instanceof Error ? err.message : "Failed to load order");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadOrder();
-  }, [orderId]);
-
-  if (loading) {
+  if (!orderId) {
     return (
-      <main className="min-h-screen bg-[#f5f6f8] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-[#e8a88a] border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600 font-semibold">Loading your order...</p>
+      <main className="min-h-screen bg-[#f5f6f8] p-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-3xl p-8 text-center border-2 border-red-200">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">❌</span>
+            </div>
+            <h2 className="text-3xl font-extrabold text-red-600 mb-2">Error</h2>
+            <p className="text-gray-600 mb-4 text-lg">No order ID provided</p>
+
+            <div className="space-y-2">
+              <Link
+                href="/"
+                className="block bg-[#101b2d] text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition"
+              >
+                Back to Home
+              </Link>
+              <Link
+                href="/checkout"
+                className="block bg-gray-300 text-gray-800 px-8 py-3 rounded-xl font-bold hover:bg-gray-400 transition"
+              >
+                New Order
+              </Link>
+            </div>
+          </div>
         </div>
       </main>
     );
   }
 
-  if (error || !order) {
+  let order: Order | null = null;
+  let error: string = "";
+
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      error = "Supabase credentials are missing";
+    } else {
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      // First, fetch just the order without relations
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("id", orderId)
+        .maybeSingle();
+
+      if (orderError) {
+        error = `Order fetch error: ${orderError.message}`;
+      } else if (!orderData) {
+        error = `Order not found with ID: ${orderId}`;
+      } else {
+        // Now fetch the order items separately
+        const { data: itemsData, error: itemsError } = await supabase
+          .from("order_items")
+          .select("id, product_id, quantity, price, products(name, image_url)")
+          .eq("order_id", orderId);
+
+        if (itemsError) {
+          error = `Order items fetch error: ${itemsError.message}`;
+        } else {
+          order = {
+            ...orderData,
+            order_items: itemsData || [],
+          } as Order;
+        }
+      }
+    }
+  } catch (err) {
+    error = err instanceof Error ? err.message : "Unknown error occurred";
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-[#f5f6f8] p-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-3xl p-8 text-center border-2 border-red-200">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">❌</span>
+            </div>
+            <h2 className="text-3xl font-extrabold text-red-600 mb-2">Error</h2>
+            <p className="text-gray-600 mb-4 text-lg">{error}</p>
+
+            <div className="space-y-2">
+              <Link
+                href="/"
+                className="block bg-[#101b2d] text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition"
+              >
+                Back to Home
+              </Link>
+              <Link
+                href="/checkout"
+                className="block bg-gray-300 text-gray-800 px-8 py-3 rounded-xl font-bold hover:bg-gray-400 transition"
+              >
+                New Order
+              </Link>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!order) {
     return (
       <main className="min-h-screen bg-[#f5f6f8] p-8">
         <div className="max-w-2xl mx-auto bg-white rounded-3xl p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">❌</span>
-          </div>
-          <h2 className="text-3xl font-extrabold text-red-600 mb-4">Error</h2>
-          <p className="text-gray-600 mb-6">{error || "Order not found"}</p>
-          <Link
-            href="/"
-            className="bg-[#101b2d] text-white px-8 py-3 rounded-xl font-bold inline-block"
-          >
-            Back to Home
+          <p className="text-gray-600">No order data available</p>
+          <Link href="/" className="text-[#101b2d] font-bold mt-4 inline-block">
+            Go Home
           </Link>
         </div>
       </main>
@@ -141,20 +156,28 @@ export default function SuccessPage({ params }: { params: { id: string } }) {
   }
 
   const subtotal =
-    Number(order.total) - Number(order.shipping_cost || 0) - Number(order.tax || 0);
+    Number(order.total) -
+    Number(order.shipping_cost || 0) -
+    Number(order.tax || 0);
 
   const estimatedDelivery =
     order.delivery_method === "express"
-      ? new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
-      : new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
+      ? new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString(
+          "en-US",
+          {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          },
+        )
+      : new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString(
+          "en-US",
+          {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          },
+        );
 
   return (
     <main className="min-h-screen bg-[#f5f6f8] p-8">
@@ -176,7 +199,9 @@ export default function SuccessPage({ params }: { params: { id: string } }) {
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-10 mb-8">
           <div className="grid grid-cols-2 gap-8 mb-10 pb-8 border-b border-gray-100">
             <div>
-              <p className="text-gray-600 text-sm font-bold mb-2">Order Number</p>
+              <p className="text-gray-600 text-sm font-bold mb-2">
+                Order Number
+              </p>
               <p className="text-sm font-extrabold text-[#101b2d] font-mono break-all">
                 {order.id}
               </p>
@@ -198,7 +223,9 @@ export default function SuccessPage({ params }: { params: { id: string } }) {
               </p>
             </div>
             <div>
-              <p className="text-gray-600 text-sm font-bold mb-2">Total Amount</p>
+              <p className="text-gray-600 text-sm font-bold mb-2">
+                Total Amount
+              </p>
               <p className="text-3xl font-extrabold text-[#e8a88a]">
                 ${Number(order.total).toFixed(2)}
               </p>
@@ -215,7 +242,8 @@ export default function SuccessPage({ params }: { params: { id: string } }) {
               </p>
               <p className="text-gray-700">{order.shipping_address}</p>
               <p className="text-gray-700">
-                {order.shipping_city}, {order.shipping_state} {order.shipping_zip}
+                {order.shipping_city}, {order.shipping_state}{" "}
+                {order.shipping_zip}
               </p>
               <p className="text-gray-700 mt-2">
                 📞 {order.shipping_phone || "Not provided"}
@@ -298,7 +326,9 @@ export default function SuccessPage({ params }: { params: { id: string } }) {
               </div>
               <div className="flex justify-between text-gray-700">
                 <span>Tax:</span>
-                <span className="font-bold">${Number(order.tax).toFixed(2)}</span>
+                <span className="font-bold">
+                  ${Number(order.tax).toFixed(2)}
+                </span>
               </div>
               <div className="flex justify-between text-2xl font-extrabold text-[#101b2d] border-t border-gray-100 pt-4 mt-4">
                 <span>Total:</span>

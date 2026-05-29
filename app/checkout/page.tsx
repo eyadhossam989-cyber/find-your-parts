@@ -127,6 +127,7 @@ export default function CheckoutPage() {
       }
 
       const orderId = orderData[0].id;
+      console.log("✅ Order created with ID:", orderId);
 
       // Create order items
       const orderItems = cartItems.map((item) => {
@@ -152,12 +153,13 @@ export default function CheckoutPage() {
         throw new Error(`Items creation failed: ${itemsError.message}`);
       }
 
-      console.log("✅ Order created:", orderId);
+      console.log("✅ Order items created");
 
       // Clear cart
       localStorage.removeItem("fyp-cart");
 
-      // Redirect to success
+      // Redirect to success with ORDER ID
+      console.log("🔄 Redirecting to success page with ID:", orderId);
       router.push(`/success/${orderId}`);
     } catch (err) {
       console.error("Order error:", err);
