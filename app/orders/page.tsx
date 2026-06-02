@@ -120,7 +120,7 @@ export default function OrdersPage() {
           setAuthed(true);
         } else {
           setAuthed(true);
-          setOrders((data as Order[]) ?? []);
+          setOrders((data as unknown as Order[]) ?? []);
         }
       } catch (err) {
         console.error("Orders load error:", err);
