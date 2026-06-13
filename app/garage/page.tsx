@@ -1887,12 +1887,11 @@ export default function GaragePage() {
                 <h3
                   style={{
                     fontWeight: 700,
-                    fontSize: 15,
+                    fontSize: 12,
                     marginBottom: 14,
                     color: "rgba(255,255,255,0.6)",
                     textTransform: "uppercase",
                     letterSpacing: "0.06em",
-                    fontSize: 12,
                   }}
                 >
                   Full Fleet
